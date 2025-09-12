@@ -4,7 +4,7 @@
 # IMPORTANT: Increment this SCRIPT_VERSION every time you push a new version
 # to your GitHub repository.
 SCRIPT_VERSION="0.6" # CURRENT VERSION OF THIS SCRIPT
-SCRIPT_URL="https://raw.githubusercontent.com/Razifadm/radu/main/radu"
+SCRIPT_URL="https://raw.githubusercontent.com/Razifadm/radu/main/usr/bin/radu"
 SCRIPT_PATH="/usr/bin/radu"
 
 # --- Function to Perform Self-Update ---
