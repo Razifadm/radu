@@ -59,77 +59,57 @@ self_update
 
 while true; do
     echo "Select an option:"
-    echo "5. Tukar firmware?"
-    echo "7. Nyah kau dari sini"
-    echo -n "Janda atau Perawan? pilih no: "
+    echo "Radu. Raducksija Firmware"
+    echo "Exit. "
+    echo -n "Which Firmware to flash?: "
     read choice
 
-    case $choice in
-    5)
+    case "$choice" in
+    radu|Radu)
         while true; do
             echo ""
-            echo "Tukar firmware ke mana? (0 untuk kembali)"
-            echo "9. Raducksija Firmware"
-            echo -n "Pilihan ditangan anda: "
-            read fw_choice
+            echo "Pilih Firmware Raducksija: (0 untuk kembali)"
+            echo "1. ChaseNSS"
+            echo "2. Full Blood Nss"
+            echo "3. FBD Lite"
+            echo -n "Pilihan versi: "
+            read raduck_ver
 
-            if [ "$fw_choice" = "0" ]; then
+            if [ "$raduck_ver" = "0" ]; then
                 echo "Kembali ke menu utama..."
                 break
             fi
 
-            case $fw_choice in
-                9)
-                    while true; do
-                        echo "Pilih Firmware Raducksija: (0 untuk kembali)"
-                        echo "1. ChaseNSS"
-                        echo "2. Full Blood Nss"
-                        echo "3. FBD Lite"
-                        echo -n "Pilihan versi: "
-                        read raduck_ver
-
-                        if [ "$raduck_ver" = "0" ]; then
-                            echo "Kembali ke menu firmware..."
-                            break
-                        fi
-
-                        case $raduck_ver in
-                            1)
-                                echo "Memasang ChaseNSS..."
-                                wget -q -O /tmp/installer http://abidarwi.sh/chasenss10092025.sh && chmod 755 /tmp/installer && /tmp/installer
-                                break
-                                ;;
-                            2)
-                                echo "Memasang Full Blood Nss..."
-                                wget -q -O /tmp/installer http://abidarwi.sh/fbd10092025.sh && chmod 755 /tmp/installer && /tmp/installer
-                                break
-                                ;;
-                            3)
-                                echo "Memasang FBD Lite..."
-                                wget -q -O /tmp/installer http://abidarwi.sh/fbdlite11092025.sh && chmod 755 /tmp/installer && /tmp/installer
-                                break
-                                ;;
-                            *)
-                                echo "Pilihan tidak sah."
-                                ;;
-                        esac
-                    done
+            case "$raduck_ver" in
+                1)
+                    echo "Memasang ChaseNSS..."
+                    wget -q -O /tmp/installer http://abidarwi.sh/chasenss10092025.sh && chmod 755 /tmp/installer && /tmp/installer
+                    break
+                    ;;
+                2)
+                    echo "Memasang Full Blood Nss..."
+                    wget -q -O /tmp/installer http://abidarwi.sh/fbd10092025.sh && chmod 755 /tmp/installer && /tmp/installer
+                    break
+                    ;;
+                3)
+                    echo "Memasang FBD Lite..."
+                    wget -q -O /tmp/installer http://abidarwi.sh/fbdlite11092025.sh && chmod 755 /tmp/installer && /tmp/installer
+                    break
                     ;;
                 *)
-                    echo "Pilihan firmware tidak sah."
+                    echo "Pilihan tidak sah."
                     ;;
             esac
         done
-        echo "Kembali ke menu utama."
         ;;
 
-    7)
+    exit|Exit)
         echo "Bye bye... Tak jumpa lagi."
         exit 0
         ;;
 
     *)
-        echo "Pilihan tidak sah. Sila masukkan nombor 5 atau 7 sahaja."
+        echo "Pilihan tidak sah. Sila masukkan 'radu' atau 'exit' sahaja."
         continue
         ;;
     esac
