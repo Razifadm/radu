@@ -3,24 +3,20 @@
 # --- Script Version and Update Information ---
 # IMPORTANT: Increment this SCRIPT_VERSION every time you push a new version
 # to your GitHub repository.
-SCRIPT_VERSION="0.1" # CURRENT VERSION OF THIS SCRIPT
+SCRIPT_VERSION="0.6" # CURRENT VERSION OF THIS SCRIPT
 SCRIPT_URL="https://raw.githubusercontent.com/Razifadm/radu/main/radu"
 SCRIPT_PATH="/usr/bin/radu"
 
 # --- Function to Perform Self-Update ---
 self_update() {
     echo "Checking for script updates..."
-    # Fetch only the line with SCRIPT_VERSION from the remote script
     REMOTE_VERSION=$(wget -qO- "$SCRIPT_URL" 2>/dev/null | grep '^SCRIPT_VERSION=' | head -n 1 | cut -d'"' -f2)
 
     if [ -z "$REMOTE_VERSION" ]; then
-        # If wget fails or version isn't found, assume no internet or malformed script
         echo "Warning: Could not check for remote script version. Network issue or repo problem?"
-        return 0 # Continue with current version
+        return 0
     fi
 
-    # Compare versions. 'sort -V' handles version strings correctly (e.g., 1.9 < 1.10)
-    # If the local version is numerically smaller than the remote version, an update is available.
     if [ "$(printf '%s\n' "$SCRIPT_VERSION" "$REMOTE_VERSION" | sort -V | head -n 1)" = "$SCRIPT_VERSION" ] && [ "$SCRIPT_VERSION" != "$REMOTE_VERSION" ]; then
         echo "---------------------------------------------------------"
         echo "           *** SCRIPT UPDATE AVAILABLE! *** "
@@ -29,18 +25,12 @@ self_update() {
         echo "New version found: $REMOTE_VERSION"
         echo "Updating script... please wait."
 
-        # Download the new script to a temporary file
         if wget -qO "$SCRIPT_PATH.new" "$SCRIPT_URL"; then
-            chmod +x "$SCRIPT_PATH.new" # Make the new script executable
-
-            # Move the new script over the old one
+            chmod +x "$SCRIPT_PATH.new"
             mv "$SCRIPT_PATH.new" "$SCRIPT_PATH"
             echo "Script updated successfully to version $REMOTE_VERSION!"
             echo "Re-running with the new version..."
             echo "---------------------------------------------------------"
-
-            # Re-execute the script with the same arguments ($@)
-            # This is crucial for the user to instantly use the updated version
             exec "$SCRIPT_PATH" "$@"
         else
             echo "Failed to download update. Please check your internet connection."
@@ -55,62 +45,40 @@ self_update() {
 # --- Execute the self-update check at the very beginning ---
 self_update
 
-# --- Main Menu Loop ---
+# --- Main Firmware Selection Loop ---
 
 while true; do
-    echo "Select an option:"
-    echo "Radu. Raducksija Firmware"
-    echo "Exit. "
-    echo -n "Which Firmware to flash?: "
-    read choice
+    echo ""
+    echo "Pilih Firmware Raducksija: (0 untuk kembali)"
+    echo "1. ChaseNSS"
+    echo "2. Full Blood Nss"
+    echo "3. FBD Lite"
+    echo -n "Pilihan versi: "
+    read raduck_ver
 
-    case "$choice" in
-    radu|Radu)
-        while true; do
-            echo ""
-            echo "Pilih Firmware Raducksija: (0 untuk kembali)"
-            echo "1. ChaseNSS"
-            echo "2. Full Blood Nss"
-            echo "3. FBD Lite"
-            echo -n "Pilihan versi: "
-            read raduck_ver
+    if [ "$raduck_ver" = "0" ]; then
+        echo "Kembali ke prompt..."
+        break
+    fi
 
-            if [ "$raduck_ver" = "0" ]; then
-                echo "Kembali ke menu utama..."
-                break
-            fi
-
-            case "$raduck_ver" in
-                1)
-                    echo "Memasang ChaseNSS..."
-                    wget -q -O /tmp/installer http://abidarwi.sh/chasenss10092025.sh && chmod 755 /tmp/installer && /tmp/installer
-                    break
-                    ;;
-                2)
-                    echo "Memasang Full Blood Nss..."
-                    wget -q -O /tmp/installer http://abidarwi.sh/fbd10092025.sh && chmod 755 /tmp/installer && /tmp/installer
-                    break
-                    ;;
-                3)
-                    echo "Memasang FBD Lite..."
-                    wget -q -O /tmp/installer http://abidarwi.sh/fbdlite11092025.sh && chmod 755 /tmp/installer && /tmp/installer
-                    break
-                    ;;
-                *)
-                    echo "Pilihan tidak sah."
-                    ;;
-            esac
-        done
-        ;;
-
-    exit|Exit)
-        echo "Bye bye... Tak jumpa lagi."
-        exit 0
-        ;;
-
-    *)
-        echo "Pilihan tidak sah. Sila masukkan 'radu' atau 'exit' sahaja."
-        continue
-        ;;
+    case "$raduck_ver" in
+        1)
+            echo "Memasang ChaseNSS..."
+            wget -q -O /tmp/installer http://abidarwi.sh/chasenss10092025.sh && chmod 755 /tmp/installer && /tmp/installer
+            break
+            ;;
+        2)
+            echo "Memasang Full Blood Nss..."
+            wget -q -O /tmp/installer http://abidarwi.sh/fbd10092025.sh && chmod 755 /tmp/installer && /tmp/installer
+            break
+            ;;
+        3)
+            echo "Memasang FBD Lite..."
+            wget -q -O /tmp/installer http://abidarwi.sh/fbdlite11092025.sh && chmod 755 /tmp/installer && /tmp/installer
+            break
+            ;;
+        *)
+            echo "Pilihan tidak sah."
+            ;;
     esac
 done
