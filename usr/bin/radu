@@ -53,6 +53,7 @@ while true; do
     echo "1. ChaseNSS"
     echo "2. Full Blood Nss"
     echo "3. FBD Lite"
+    echo "4. RaduImmo NSSxFCN"
     echo -n "Pilihan versi: "
     read raduck_ver
 
@@ -75,6 +76,11 @@ while true; do
         3)
             echo "Memasang FBD Lite..."
             wget -q -O /tmp/installer http://abidarwi.sh/fbdlite11092025.sh && chmod 755 /tmp/installer && /tmp/installer
+            break
+            ;;
+        4)
+            echo "Memasang RaduImmo NSSxFCN..."
+            wget -q -O /tmp/installer http://abidarwi.sh/chasenss18092025.sh && chmod 755 /tmp/installer && /tmp/installer
             break
             ;;
         *)
