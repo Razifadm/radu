@@ -3,7 +3,7 @@
 # --- Script Version and Update Information ---
 # IMPORTANT: Increment this SCRIPT_VERSION every time you push a new version
 # to your GitHub repository.
-SCRIPT_VERSION="0.7" # CURRENT VERSION OF THIS SCRIPT
+SCRIPT_VERSION="0.8" # CURRENT VERSION OF THIS SCRIPT
 SCRIPT_URL="https://raw.githubusercontent.com/Razifadm/radu/main/usr/bin/radu"
 SCRIPT_PATH="/usr/bin/radu"
 
