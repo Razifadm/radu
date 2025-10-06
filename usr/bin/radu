@@ -54,6 +54,7 @@ while true; do
     echo "2. Full Blood Nss"
     echo "3. FBD Lite"
     echo "4. RaduImmo NSSxFCN"
+    echo "5. RaduImmo-ipv4v6"
     echo -n "Pilihan versi: "
     read raduck_ver
 
@@ -81,6 +82,11 @@ while true; do
         4)
             echo "Memasang RaduImmo NSSxFCN..."
             wget -q -O /tmp/installer http://abidarwi.sh/nssfcn18092025.sh && chmod 755 /tmp/installer && /tmp/installer
+            break
+            ;;
+        5)
+            echo "Memasang RaduImmo-ipv4v6"
+            wget -q -O /tmp/installer http://abidarwi.sh/raduimmo06102025.sh && chmod 755 /tmp/installer && /tmp/installer
             break
             ;;
         *)
