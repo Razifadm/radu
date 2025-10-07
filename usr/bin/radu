@@ -2,6 +2,9 @@
 
 echo "This process will install luci-app-netstats"
 
+#remove var lock
+rm -f /var/lock/opkg.lock
+
 #Skrip Uninstall something2 apps
 #update software list
 opkg update
@@ -11,6 +14,9 @@ echo "Updating software list"
 opkg remove --force-depends --autoremove vnstat2
 opkg remove --force-depends --autoremove vnstati2
 opkg remove --force-depends --autoremove luci-app-vnstat2
+
+#remove var lock 2nd step if opkg remove fail
+rm -f /var/lock/opkg.lock
 
 #download ipk netstat
 
