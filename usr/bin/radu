@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo "This process will install luci-app-netstats"
+
 #Skrip Uninstall something2 apps
 #update software list
 opkg update
@@ -16,6 +18,9 @@ wget -O /etc/luci-app-netstat.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-netstat.ipk
 
 opkg install /etc/luci-app-netstat.ipk
+
+#buang ipk dari folder tuk jimat spaces
+rm -f /etc/luci-app-netstat.ipk
 
 echo "luci-app-netstat Installed"
 rm -f "$0"
