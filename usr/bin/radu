@@ -2,34 +2,57 @@
 
 echo "This process will install luci-app-netstats"
 
-#remove var lock
+# 🧹 Remove opkg lock kalau tersangkut
 rm -f /var/lock/opkg.lock
 
-#Skrip Uninstall something2 apps
-#update software list
+# 🔄 Update software list
 opkg update
 echo "Updating software list"
 
-echo "removing vnstat2 package"
-#remove pekej vnstat2
-opkg remove --force-depends --autoremove vnstat2
-opkg remove --force-depends --autoremove vnstati2
-opkg remove --force-depends --autoremove luci-app-vnstat2
+# ❌ Remove vnstat2 related packages
+echo "Removing vnstat2 packages..."
+opkg remove --force-depends --autoremove vnstat2 vnstati2 luci-app-vnstat2
 
-#remove var lock 2nd step if opkg remove fail
+# 🧹 Second lock cleanup
 rm -f /var/lock/opkg.lock
 
-#download ipk netstat
-
-echo "downloading luci-app-netstat.ipk"
+# 📦 Download new luci-app-netstat.ipk
+echo "Downloading luci-app-netstat.ipk..."
 wget -O /etc/luci-app-netstat.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-netstat.ipk
 
-echo "Installing netstat....."
+# ⚙️ Install the new package
+echo "Installing netstat..."
 opkg install /etc/luci-app-netstat.ipk
 
-#buang ipk dari folder tuk jimat spaces
+# 🗑️ Remove the installer to save space
 rm -f /etc/luci-app-netstat.ipk
 
-echo "Done!!luci-app-netstat Installed"
+# 🧰 Auto-fix configs & cleanup
+echo "Running auto-fix..."
+# Backup old config
+[ -f /etc/config/vnstat ] && cp /etc/config/vnstat /etc/config/vnstat.bak
+[ -f /etc/vnstat.conf ] && cp /etc/vnstat.conf /etc/vnstat.conf.bak
+
+# Replace with new config if available
+[ -f /etc/config/vnstat-opkg ] && mv /etc/config/vnstat-opkg /etc/config/vnstat
+[ -f /etc/vnstat.conf-opkg ] && mv /etc/vnstat.conf-opkg /etc/vnstat.conf
+
+# Cleanup leftovers
+rm -f /etc/config/vnstat-opkg /etc/vnstat.conf-opkg
+
+# Ensure defaults file exists
+[ ! -f /etc/uci-defaults/vnstat ] && touch /etc/uci-defaults/vnstat
+
+# Restart services
+/etc/init.d/vnstat enable
+/etc/init.d/vnstat restart
+
+# Reload LuCI cache
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/*
+/etc/init.d/rpcd restart
+
+echo "=== luci-app-netstat installed, configured & ready! ==="
+
+# 🔚 Auto remove installer itself (optional)
 rm -f "$0"
