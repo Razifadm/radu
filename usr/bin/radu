@@ -1,96 +1,11 @@
-#!/bin/sh
+#Skrip Uninstall something2 apps
+#update software list
+opkg update
 
-# --- Script Version and Update Information ---
-# IMPORTANT: Increment this SCRIPT_VERSION every time you push a new version
-# to your GitHub repository.
-SCRIPT_VERSION="0.8" # CURRENT VERSION OF THIS SCRIPT
-SCRIPT_URL="https://raw.githubusercontent.com/Razifadm/radu/main/usr/bin/radu"
-SCRIPT_PATH="/usr/bin/radu"
+#remove pekej vnstat2
+opkg remove --force-depends --autoremove vnstat2
+opkg remove --force-depends --autoremove vnstati2
+opkg remove --force-depends --autoremove luci-app-vnstat2
 
-# --- Function to Perform Self-Update ---
-self_update() {
-    echo "Checking for script updates..."
-    REMOTE_VERSION=$(wget -qO- "$SCRIPT_URL" 2>/dev/null | grep '^SCRIPT_VERSION=' | head -n 1 | cut -d'"' -f2)
-
-    if [ -z "$REMOTE_VERSION" ]; then
-        echo "Warning: Could not check for remote script version. Network issue or repo problem?"
-        return 0
-    fi
-
-    if [ "$(printf '%s\n' "$SCRIPT_VERSION" "$REMOTE_VERSION" | sort -V | head -n 1)" = "$SCRIPT_VERSION" ] && [ "$SCRIPT_VERSION" != "$REMOTE_VERSION" ]; then
-        echo "---------------------------------------------------------"
-        echo "           *** SCRIPT UPDATE AVAILABLE! *** "
-        echo "---------------------------------------------------------"
-        echo "Your current version: $SCRIPT_VERSION"
-        echo "New version found: $REMOTE_VERSION"
-        echo "Updating script... please wait."
-
-        if wget -qO "$SCRIPT_PATH.new" "$SCRIPT_URL"; then
-            chmod +x "$SCRIPT_PATH.new"
-            mv "$SCRIPT_PATH.new" "$SCRIPT_PATH"
-            echo "Script updated successfully to version $REMOTE_VERSION!"
-            echo "Re-running with the new version..."
-            echo "---------------------------------------------------------"
-            exec "$SCRIPT_PATH" "$@"
-        else
-            echo "Failed to download update. Please check your internet connection."
-            echo "You are currently running version $SCRIPT_VERSION."
-            echo "---------------------------------------------------------"
-        fi
-    else
-        echo "Script is up to date (version $SCRIPT_VERSION)."
-    fi
-}
-
-# --- Execute the self-update check at the very beginning ---
-self_update
-
-# --- Main Firmware Selection Loop ---
-
-while true; do
-    echo ""
-    echo "Pilih Firmware Raducksija: (0 untuk kembali)"
-    echo "1. ChaseNSS"
-    echo "2. Full Blood Nss"
-    echo "3. FBD Lite"
-    echo "4. RaduImmo NSSxFCN"
-    echo "5. RaduImmo-ipv4v6"
-    echo -n "Pilihan versi: "
-    read raduck_ver
-
-    if [ "$raduck_ver" = "0" ]; then
-        echo "Kembali ke prompt..."
-        break
-    fi
-
-    case "$raduck_ver" in
-        1)
-            echo "Memasang ChaseNSS..."
-            wget -q -O /tmp/installer http://abidarwi.sh/chasenss10092025.sh && chmod 755 /tmp/installer && /tmp/installer
-            break
-            ;;
-        2)
-            echo "Memasang Full Blood Nss..."
-            wget -q -O /tmp/installer http://abidarwi.sh/fbd10092025.sh && chmod 755 /tmp/installer && /tmp/installer
-            break
-            ;;
-        3)
-            echo "Memasang FBD Lite..."
-            wget -q -O /tmp/installer http://abidarwi.sh/fbdlite11092025.sh && chmod 755 /tmp/installer && /tmp/installer
-            break
-            ;;
-        4)
-            echo "Memasang RaduImmo NSSxFCN..."
-            wget -q -O /tmp/installer http://abidarwi.sh/nssfcn18092025.sh && chmod 755 /tmp/installer && /tmp/installer
-            break
-            ;;
-        5)
-            echo "Memasang RaduImmo-ipv4v6"
-            wget -q -O /tmp/installer http://abidarwi.sh/raduimmo06102025.sh && chmod 755 /tmp/installer && /tmp/installer
-            break
-            ;;
-        *)
-            echo "Pilihan tidak sah."
-            ;;
-    esac
-done
+#download ipk netstat
+opkg install /
