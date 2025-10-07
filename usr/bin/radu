@@ -10,6 +10,7 @@ rm -f /var/lock/opkg.lock
 opkg update
 echo "Updating software list"
 
+echo "removing vnstat2 package"
 #remove pekej vnstat2
 opkg remove --force-depends --autoremove vnstat2
 opkg remove --force-depends --autoremove vnstati2
@@ -20,13 +21,15 @@ rm -f /var/lock/opkg.lock
 
 #download ipk netstat
 
+echo "downloading luci-app-netstat.ipk"
 wget -O /etc/luci-app-netstat.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-netstat.ipk
 
+echo "Installing netstat....."
 opkg install /etc/luci-app-netstat.ipk
 
 #buang ipk dari folder tuk jimat spaces
 rm -f /etc/luci-app-netstat.ipk
 
-echo "luci-app-netstat Installed"
+echo "Done!!luci-app-netstat Installed"
 rm -f "$0"
