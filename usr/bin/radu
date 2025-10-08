@@ -11,7 +11,7 @@ echo "Updating software list"
 
 # ❌ Remove vnstat2 related packages
 echo "Removing vnstat2 packages..."
-opkg remove --force-depends --autoremove vnstat2 vnstati2 luci-app-vnstat2
+opkg remove --force-depends --autoremove vnstat vnstat2 vnstati2 luci-app-vnstat2
 
 # 🧹 Second lock cleanup
 rm -f /var/lock/opkg.lock
@@ -44,6 +44,10 @@ rm -f /etc/config/vnstat-opkg /etc/vnstat.conf-opkg
 # Ensure defaults file exists
 [ ! -f /etc/uci-defaults/vnstat ] && touch /etc/uci-defaults/vnstat
 
+#set database direction
+sed -i "s/DatabaseDir \"\/var\/lib\/vnstat\"/DatabaseDir \"\/etc\/vnstat\"/g" /etc/vnstat.conf
+sed -i 's/eth0/wwan0_1/g' /etc/vnstat.conf
+
 # Restart services
 /etc/init.d/vnstat enable
 /etc/init.d/vnstat restart
@@ -54,5 +58,5 @@ rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/*
 
 echo "=== luci-app-netstat installed, configured & ready! ==="
 
-# 🔚 Auto remove installer itself (optional)
+# 🔚 Auto remove installer itself
 rm -f "$0"
