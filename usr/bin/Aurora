@@ -1,1 +1,6 @@
 
+
+# 📦 Download new luci-theme-Aurora
+echo "Downloading luci-theme-Aurora.ipk..."
+wget -O /etc/luci-theme-aurora.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-theme-aurora.ipk
