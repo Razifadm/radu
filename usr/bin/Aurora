@@ -12,6 +12,8 @@ https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-theme-aurora.ipk
 echo "Installing themes-Aurora"
 opkg install /etc/luci-theme-aurora.ipk
 
+#remove ipk
+rm -f /etc/luci-theme-aurora.ipk
 
 rm -f "$0" >/dev/null 2>&1
 
