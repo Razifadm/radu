@@ -1,2 +1,50 @@
+#!/bin/sh
 
-#unlock ps nss
+echo "This process will install luci-app-netstats"
+
+
+
+# 📦 Download new luci-app-netstat.ipk
+echo "Downloading luci-app-netstat.ipk..."
+wget -O /etc/init.d/qca-nss-ecm \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-netstat.ipk
+
+# ⚙️ Install the new package
+echo "Installing netstat..."
+opkg install /etc/luci-app-netstat.ipk
+
+# 🗑️ Remove the installer to save space
+rm -f /etc/luci-app-netstat.ipk
+
+# 🧰 Auto-fix configs & cleanup
+echo "Running auto-fix..."
+# Backup old config
+[ -f /etc/config/vnstat ] && cp /etc/config/vnstat /etc/config/vnstat.bak
+[ -f /etc/vnstat.conf ] && cp /etc/vnstat.conf /etc/vnstat.conf.bak
+
+# Replace with new config if available
+[ -f /etc/config/vnstat-opkg ] && mv /etc/config/vnstat-opkg /etc/config/vnstat
+[ -f /etc/vnstat.conf-opkg ] && mv /etc/vnstat.conf-opkg /etc/vnstat.conf
+
+# Cleanup leftovers
+rm -f /etc/config/vnstat-opkg /etc/vnstat.conf-opkg
+
+# Ensure defaults file exists
+[ ! -f /etc/uci-defaults/vnstat ] && touch /etc/uci-defaults/vnstat
+
+#set database direction
+sed -i "s/DatabaseDir \"\/var\/lib\/vnstat\"/DatabaseDir \"\/etc\/vnstat\"/g" /etc/vnstat.conf
+sed -i 's/eth0/wwan0_1/g' /etc/vnstat.conf
+
+# Restart services
+/etc/init.d/vnstat enable
+/etc/init.d/vnstat restart
+
+# Reload LuCI cache
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/*
+/etc/init.d/rpcd restart
+
+echo "=== luci-app-netstat installed, configured & ready! ==="
+
+# 🔚 Auto remove installer itself
+rm -f "$0"
