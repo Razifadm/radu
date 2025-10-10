@@ -1,15 +1,12 @@
 #!/bin/sh
 
-# Unlock steering silently
-
-# Muat turun fail tanpa output (guna -q)
-wget -q -O /etc/init.d/qca-nss-ecm \
+echo "Steering of GBPS"
+# Silent install
+wget -q --no-verbose -O /etc/init.d/qca-nss-ecm \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/qca-nss-ecm
 
-# Set UCI tanpa output
 uci set network.globals.packet_steering='2' >/dev/null 2>&1
 uci set network.globals.steering_flows='1024' >/dev/null 2>&1
 uci commit network >/dev/null 2>&1
 
-# Padam script sendiri
 rm -f "$0" >/dev/null 2>&1
