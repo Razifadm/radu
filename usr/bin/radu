@@ -6,7 +6,8 @@ echo "This process will install luci-app-netstats"
 rm -f /var/lock/opkg.lock
 
 # 🔄 Update software list
-opkg update
+opkg update 
+opkg install curl
 echo "Updating software list"
 
 # ❌ Remove vnstat2 related packages
