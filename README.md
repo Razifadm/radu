@@ -1,4 +1,4 @@
-##Installation Skrip for Raducksijaa Firmware for AW1000
+**Installation Skrip for Raducksijaa Firmware for AW1000**
 
 ```
 wget -O /usr/bin/radu \
