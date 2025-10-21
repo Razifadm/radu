@@ -32,9 +32,9 @@ wget -O /etc/config/defmodems \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/defmodems >/dev/null 2>&1
 
 # Reload LuCI cache
-#echo "reloading webui"
-#rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1
-#/etc/init.d/rpcd restart >/dev/null 2>&1
+echo "Restarting webui"
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1
+/etc/init.d/rpcd restart >/dev/null 2>&1
 
 echo "=== New 3gInfoLite Installed! ==="
 
