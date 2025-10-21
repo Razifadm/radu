@@ -16,7 +16,6 @@ https://raw.githubusercontent.com/Razifadm/radu/ipk/modemdata.ipk >/dev/null 2>&
 wget -O /etc/luci-app-modemdata.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-modemdata.ipk >/dev/null 2>&1
 
-
 # ⚙️ Install the new package
 echo "Installing apps..."
 opkg install /etc/modemdata.ipk >/dev/null 2>&1
@@ -24,15 +23,18 @@ sleep 1
 opkg install /etc/luci-app-modemdata.ipk >/dev/null 2>&1
 sleep 1
 
+#delete config defmodems brought by apps
+rm -f /etc/config/defmodems
+
 #Download config
+echo "setup new 3infolite"
 wget -O /etc/config/defmodems \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/defmodems >/dev/null 2>&1
-uci commit defmodems
 
 # Reload LuCI cache
-echo "reloading webui"
-rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1
-/etc/init.d/rpcd restart >/dev/null 2>&1
+#echo "reloading webui"
+#rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1
+#/etc/init.d/rpcd restart >/dev/null 2>&1
 
 echo "=== New 3gInfoLite Installed! ==="
 
