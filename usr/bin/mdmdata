@@ -16,10 +16,6 @@ https://raw.githubusercontent.com/Razifadm/radu/ipk/modemdata.ipk >/dev/null 2>&
 wget -O /etc/luci-app-modemdata.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-modemdata.ipk >/dev/null 2>&1
 
-#Download config
-wget -O /etc/config/defmodems \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/defmodems >/dev/null 2>&1
-
 
 # ⚙️ Install the new package
 echo "Installing apps..."
@@ -27,6 +23,11 @@ opkg install /etc/modemdata.ipk >/dev/null 2>&1
 sleep 1
 opkg install /etc/luci-app-modemdata.ipk >/dev/null 2>&1
 sleep 1
+
+#Download config
+wget -O /etc/config/defmodems \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/defmodems >/dev/null 2>&1
+uci commit defmodems
 
 # Reload LuCI cache
 echo "reloading webui"
