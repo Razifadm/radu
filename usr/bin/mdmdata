@@ -27,16 +27,16 @@ sleep 1
 rm -f /etc/config/defmodems
 
 #Download config
-echo "setup new 3infolite"
+echo "Finalizing installation.."
 wget -O /etc/config/defmodems \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/defmodems >/dev/null 2>&1
 
 # Reload LuCI cache
-echo "Restarting webui"
+echo "Applying final installation.."
 rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1
 /etc/init.d/rpcd restart >/dev/null 2>&1
 
-echo "=== New 3gInfoLite Installed! ==="
+echo "=== DONE!>> 3gInfoLite Installed!<< ==="
 
 # 🔚 Auto remove installer itself
 rm -f "$0"
