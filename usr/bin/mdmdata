@@ -5,6 +5,8 @@ echo "modem data"
 # 🧹 Remove opkg lock kalau tersangkut
 rm -f /var/lock/opkg.lock
 
+#remove luci-app-3ginfolite
+#opkg remove --force-depends --autoremove luci-app-3ginfolite
 
 # 📦 Download modemdata
 echo "Downloading apps.ipk..."
