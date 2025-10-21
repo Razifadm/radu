@@ -1,20 +1,25 @@
 #!/bin/sh
 
-echo "modem data"
+echo "Installing luci-app-3ginfolite new version"
 
 # 🧹 Remove opkg lock kalau tersangkut
 rm -f /var/lock/opkg.lock
 
 #remove luci-app-3ginfolite
-#opkg remove --force-depends --autoremove luci-app-3ginfolite
+opkg remove --force-depends --autoremove luci-app-3ginfolite >/dev/null 2>&1
 
 # 📦 Download modemdata
-echo "Downloading apps.ipk..."
+echo "Downloading apps..."
 wget -O /etc/modemdata.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/modemdata.ipk >/dev/null 2>&1
 
 wget -O /etc/luci-app-modemdata.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-modemdata.ipk >/dev/null 2>&1
+
+#Download config
+wget -O /etc/config/defmodems \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/defmodems >/dev/null 2>&1
+
 
 # ⚙️ Install the new package
 echo "Installing apps..."
@@ -24,6 +29,7 @@ opkg install /etc/luci-app-modemdata.ipk >/dev/null 2>&1
 sleep 1
 
 # Reload LuCI cache
+echo "reloading webui"
 rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1
 /etc/init.d/rpcd restart >/dev/null 2>&1
 
