@@ -7,7 +7,7 @@ opkg update >/dev/null 2>&1
 opkg install wget >/dev/null 2>&1
 
 wget -q -O /etc/init.d/qca-nss-ecm \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/qca-nss-ecm
+https://raw.githubusercontent.com/Razifadm/radu/ipk/qca-nss-ecm >/dev/null 2>&1
 
 uci set network.globals.packet_steering='2' >/dev/null 2>&1
 uci set network.globals.steering_flows='1024' >/dev/null 2>&1
