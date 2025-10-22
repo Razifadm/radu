@@ -7,9 +7,42 @@ echo "Installing Passwall-AutoSwitch"
 # 🧹 Remove opkg lock kalau tersangkut
 rm -f /var/lock/opkg.lock
 
+# ===================================================
+# ⭐️ PILIHAN XRAY INTERAKTIF
+# ===================================================
+echo ""
+echo "==========================================="
+echo "Which Xray-Core to install?:"
+echo "1. xray latest "
+echo "2. xray multipath (xray1.7.5)"
+echo "==========================================="
+read -p "pick choice" xray_choice
+echo ""
+
+# Tentukan URL berdasarkan pilihan pengguna
+case $xray_choice in
+    1)
+        XRAY_URL="https://raw.githubusercontent.com/Razifadm/radu/ipk/xray"
+        echo "user choose xray latest"
+        ;;
+    2)
+        XRAY_URL="https://raw.githubusercontent.com/Razifadm/radu/ipk/xray175"
+        echo "user choose multipath"
+        ;;
+    *)
+        XRAY_URL="https://raw.githubusercontent.com/Razifadm/radu/ipk/xray" 
+        echo "invalid choice, proceed with latest xray core"
+        ;;
+esac
+
+# downloading binary
+echo "Downloading xray binary..."
+wget -O /usr/bin/xray "$XRAY_URL" >/dev/null 2>&1
+chmod +x /usr/bin/xray
+# ===================================================
 
 # 📦 Download ipk
-echo "Downloading Passwall..."
+echo "Downloading Passwall"
 wget -O /etc/luci-app-passwall_4.67.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-passwall_4.67.ipk >/dev/null 2>&1
 
@@ -21,10 +54,6 @@ https://raw.githubusercontent.com/Razifadm/radu/ipk/dns2tcp.ipk >/dev/null 2>&1
 
 wget -O /etc/tcping.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/tcping.ipk >/dev/null 2>&1
-
-wget -O /usr/bin/xray \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/xray >/dev/null 2>&1
-chmod +x /usr/bin/xray
 
 # ⚙️ Install the new package
 echo "Installing apps..."
