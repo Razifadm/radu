@@ -1,0 +1,57 @@
+#!/bin/sh
+
+echo "Installing Passwall-AutoSwitch"
+
+# 🧹 Remove opkg lock kalau tersangkut
+rm -f /var/lock/opkg.lock
+
+
+# 📦 Download ipk
+echo "Downloading Passwall..."
+wget -O /etc/luci-app-passwall_4.67.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-passwall_4.67.ipk >/dev/null 2>&1
+
+wget -O /etc/dns2socks.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/dns2socks.ipk >/dev/null 2>&1
+
+wget -O /etc/dns2tcp.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/dns2tcp.ipk >/dev/null 2>&1
+
+wget -O /etc/tcping.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/tcping.ipk >/dev/null 2>&1
+
+# ⚙️ Install the new package
+echo "Installing apps..."
+
+opkg install /etc/dns2socks.ipk >/dev/null 2>&1
+sleep 1
+opkg install /etc/dns2tcp.ipk >/dev/null 2>&1
+sleep 1
+opkg install /etc/tcping.ipk >/dev/null 2>&1
+sleep 1
+opkg install /etc/luci-app-passwall_4.67.ipk >/dev/null 2>&1
+sleep 1
+
+#delete rules passwall
+rm -f /usr/share/passwall/rules/proxy_ip
+rm -f /usr/share/passwall/rules/proxy_host
+rm -f /usr/share/passwall/rules/domains_excluded
+rm -f /usr/share/passwall/rules/direct_ip
+rm -f /usr/share/passwall/rules/direct_host
+rm -f /usr/share/passwall/rules/block_ip
+rm -f /usr/share/passwall/rules/block_host
+rm -f /usr/share/passwall/rules/gfwlist
+rm -f /usr/share/passwall/rules/chnroute6
+rm -f /usr/share/passwall/rules/chnroute
+rm -f /usr/share/passwall/rules/chnlist
+
+
+# Reload LuCI cache
+echo "Applying final installation.."
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1
+/etc/init.d/rpcd restart >/dev/null 2>&1
+
+echo "=== DONE!>> Passwall Installed<< ==="
+
+# 🔚 Auto remove installer itself
+rm -f "$0"
