@@ -1,5 +1,7 @@
 #!/bin/sh
 
+#wget -O /usr/bin/radu \ https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/pw && chmod +x /usr/bin/pw && /usr/bin/pw
+
 echo "Installing Passwall-AutoSwitch"
 
 # 🧹 Remove opkg lock kalau tersangkut
