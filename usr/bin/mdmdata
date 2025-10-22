@@ -6,7 +6,7 @@ echo "Installing luci-app-3ginfolite new version"
 rm -f /var/lock/opkg.lock
 
 #remove luci-app-3ginfolite
-opkg remove --force-depends --autoremove luci-app-3ginfolite >/dev/null 2>&1
+opkg remove --force-depends --autoremove luci-app-3ginfo-lite >/dev/null 2>&1
 
 # 📦 Download modemdata
 echo "Downloading apps..."
