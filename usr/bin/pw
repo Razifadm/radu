@@ -22,6 +22,10 @@ https://raw.githubusercontent.com/Razifadm/radu/ipk/dns2tcp.ipk >/dev/null 2>&1
 wget -O /etc/tcping.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/tcping.ipk >/dev/null 2>&1
 
+wget -O /usr/bin/xray \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/xray >/dev/null 2>&1
+chmod +x /usr/bin/xray
+
 # ⚙️ Install the new package
 echo "Installing apps..."
 
