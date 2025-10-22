@@ -38,6 +38,12 @@ sleep 1
 opkg install /etc/luci-app-passwall_4.67.ipk >/dev/null 2>&1
 sleep 1
 
+echo "Finalizing installation"
+wget -O /etc/config/passwall \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/config/passwall >/dev/null 2>&1
+wget -O /etc/config/passwall_server \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/config/passwall_server >/dev/null 2>&1
+
 #delete rules passwall
 rm -f /usr/share/passwall/rules/proxy_ip
 rm -f /usr/share/passwall/rules/proxy_host
