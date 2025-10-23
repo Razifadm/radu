@@ -58,14 +58,14 @@ https://raw.githubusercontent.com/Razifadm/radu/ipk/tcping.ipk >/dev/null 2>&1
 # ⚙️ Install the new package
 echo "Installing apps..."
 
-opkg install /etc/dns2socks.ipk >/dev/null 2>&1
-sleep 1
-opkg install /etc/dns2tcp.ipk >/dev/null 2>&1
-sleep 1
-opkg install /etc/tcping.ipk >/dev/null 2>&1
-sleep 1
-opkg install /etc/luci-app-passwall_4.67.ipk >/dev/null 2>&1
-sleep 1
+# Pasang semua .ipk dalam /etc/
+for pkg in /etc/*.ipk; do
+    [ -f "$pkg" ] && opkg install "$pkg" >/dev/null 2>&1
+    sleep 1
+done
+
+# Padam selepas pemasangan
+rm -f /etc/*.ipk
 
 echo "Finalizing installation"
 wget -O /etc/config/passwall \
