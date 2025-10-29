@@ -3,4 +3,57 @@
 #chmod skrip, bin
 #setup interface tun0, firewall
 
-#1. Download fail
+echo "Welcome to Simple SSHWS by @stdstrx"
+echo "Luci"ed" by @Raducksijaa"
+
+echo "Downloading sshws"
+#1. Download fail dan skrip
+wget -O /usr/bin/sshws \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/bin/sshws >/dev/null 2>&1
+
+wget -O /etc/init.d/sshws \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/sshws >/dev/null 2>&1
+
+wget -O /etc/init.d/sshws-wrapper \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/sshws-wrapper >/dev/null 2>&1
+
+wget -O /usr/lib/lua/luci/controller/sshws.lua \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/sshws.lua >/dev/null 2>&1
+
+wget -O /usr/lib/lua/luci/view/sshws.htm \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/sshws.htm >/dev/null 2>&1
+
+echo "Setup SSHWS binary"
+
+#Permission skrip
+chmod +x /etc/init.d/sshws
+chmod +x /etc/init.d/sshws-wrapper
+chmod +x /usr/bin/sshws
+
+echo "Finalizing interface setup"
+#Setup Interface tun0
+uci set network.sshws='interface'
+uci set network.sshws.proto='unmanaged'
+uci set network.sshws.ifname='tun0'
+uci commit network
+
+#firewall setup
+uci set firewall.VPN=zone
+uci set firewall.VPN.name='VPN'
+uci set firewall.VPN.network='sshws'
+uci set firewall.VPN.input='REJECT'   
+uci set firewall.VPN.forward='REJECT' 
+uci set firewall.VPN.output='ACCEPT' 
+uci set firewall.VPN.masq='1'
+uci set firewall.VPN.mtu_fix='1'
+uci add firewall forwarding
+uci set firewall.@forwarding[-1].src='lan'
+uci set firewall.@forwarding[-1].dest='VPN'
+uci commit firewall
+
+echo "Installation Done- Welcome to SSH World"
+/etc/init.d/firewall reload
+
+rm -f "$0"
+
+
