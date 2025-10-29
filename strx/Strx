@@ -39,7 +39,7 @@ echo "Finalizing interface setup"
 uci set network.sshws='interface'
 uci set network.sshws.proto='unmanaged'
 uci set network.sshws.ifname='tun0'
-uci commit network
+uci commit network >/dev/null 2>&1
 
 #firewall setup
 uci set firewall.VPN=zone
@@ -53,7 +53,7 @@ uci set firewall.VPN.mtu_fix='1'
 uci add firewall forwarding
 uci set firewall.@forwarding[-1].src='lan'
 uci set firewall.@forwarding[-1].dest='VPN'
-uci commit firewall
+uci commit firewall >/dev/null 2>&1
 
 echo "Installation Done- Welcome to SSH World"
 /etc/init.d/firewall reload
