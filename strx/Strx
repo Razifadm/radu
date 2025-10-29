@@ -56,7 +56,7 @@ uci set firewall.@forwarding[-1].dest='VPN'
 uci commit firewall >/dev/null 2>&1
 
 echo "Installation Done- Welcome to SSH World"
-/etc/init.d/firewall reload
+/etc/init.d/firewall reload >/dev/null 2>&1
 
 rm -f "$0"
 
