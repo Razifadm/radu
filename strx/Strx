@@ -1,1 +1,6 @@
-#
+#!/bin/sh
+#Flow download semua fail
+#chmod skrip, bin
+#setup interface tun0, firewall
+
+#1. Download fail
