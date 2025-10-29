@@ -1,0 +1,76 @@
+<%+header%>
+<style>
+  .sshws-section { background: #1a1a1f; padding: 20px; border-radius: 12px; color: #eee; }
+  .sshws-section h2 { color: #00e0c7; }
+  .sshws-field { margin-bottom: 12px; }
+  .sshws-label { font-weight: 600; display: block; margin-bottom: 4px; }
+  input[type=text], input[type=number], input[type=password], textarea {
+    width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #333; background: #222; color: #fff;
+  }
+  .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; margin-right: 6px; }
+  .btn-save { background: #00c4a7; color: white; }
+  .btn-reload { background: #0077cc; color: white; }
+  .btn-start { background: #28a745; color: white; }
+  .btn-stop { background: #dc3545; color: white; }
+  .btn:hover { opacity: 0.85; }
+  .message { margin-bottom: 15px; padding: 10px; border-radius: 6px; background: #222; color: #0f0; }
+</style>
+
+<div class="sshws-section">
+  <h2>SSHWS Tunnel Configuration</h2>
+
+  <% if message then %>
+    <div class="message"><%=message%></div>
+  <% end %>
+
+  <form method="post" action="<%=url('admin/services/sshws')%>">
+    <div class="sshws-field">
+      <span class="sshws-label">Proxy Host</span>
+      <input type="text" name="proxyHost" value="<%=cfg.proxyHost or ''%>">
+    </div>
+
+    <div class="sshws-field">
+      <span class="sshws-label">Proxy Port</span>
+      <input type="number" name="proxyPort" value="<%=cfg.proxyPort or ''%>">
+    </div>
+
+    <fieldset class="sshws-field">
+      <legend><b>SSH Configuration</b></legend>
+      <div class="sshws-field">
+        <span class="sshws-label">Host</span>
+        <input type="text" name="ssh_host" value="<%=cfg.ssh and cfg.ssh.host or ''%>">
+      </div>
+      <div class="sshws-field">
+        <span class="sshws-label">Port</span>
+        <input type="number" name="ssh_port" value="<%=cfg.ssh and cfg.ssh.port or ''%>">
+      </div>
+      <div class="sshws-field">
+        <span class="sshws-label">Username</span>
+        <input type="text" name="ssh_username" value="<%=cfg.ssh and cfg.ssh.username or ''%>">
+      </div>
+      <div class="sshws-field">
+        <span class="sshws-label">Password</span>
+        <input type="password" name="ssh_password" value="<%=cfg.ssh and cfg.ssh.password or ''%>">
+      </div>
+    </fieldset>
+
+    <div class="sshws-field">
+      <span class="sshws-label">HTTP Payload</span>
+      <textarea rows="4" name="httpPayload"><%=cfg.httpPayload or ''%></textarea>
+    </div>
+
+    <div class="sshws-field">
+      <span class="sshws-label">Connection Timeout</span>
+      <input type="number" name="connectionTimeout" value="<%=cfg.connectionTimeout or ''%>">
+    </div>
+
+    <div style="margin-top:20px;">
+      <button class="btn btn-reload" name="action" value="reload">Reload</button>
+      <button class="btn btn-save" name="action" value="save">Save & Apply</button>
+      <button class="btn btn-start" name="action" value="start">Start</button>
+      <button class="btn btn-stop" name="action" value="stop">Stop</button>
+    </div>
+  </form>
+</div>
+
+<%+footer%>

@@ -1,0 +1,50 @@
+guide skrip
+
+masukkan sshws ke
+dan sshws-wrapper ke etct/init.d
+
+binari sshws(sshws-tun) ke /usr/bin
+
+file config.json perlu ada di ./config.json
+
+
+command permission skrip init.d
+
+chmod +x /etc/init.d/sshws
+chmod +x /etc/init.d/sshws-wrapper
+
+
+
+debugging command
+
+/etc/init.d/sshws restart
+tail -f /var/log/sshws.log
+
+
+
+add interface dan firewall
+
+# 1) Buat interface sshws (unmanaged) guna tun0
+uci set network.sshws='interface'
+uci set network.sshws.proto='unmanaged'
+uci set network.sshws.ifname='tun0'
+uci commit network
+/etc/init.d/network reload
+
+# 2) Tambah forwarding firewall (benarkan lan -> wan)
+uci add firewall forwarding
+uci set firewall.@forwarding[-1].src='lan'
+uci set firewall.@forwarding[-1].dest='wan'
+
+# 3) Tambah rule firewall bernama "vpn"
+uci add firewall rule
+uci set firewall.@rule[-1].name='vpn'
+uci set firewall.@rule[-1].src='lan'
+uci set firewall.@rule[-1].dest='wan'
+uci set firewall.@rule[-1].target='ACCEPT'
+# (optional) set proto/port jika mahu hadkan
+# uci set firewall.@rule[-1].proto='tcp udp'
+
+uci commit firewall
+/etc/init.d/firewall reload
+
