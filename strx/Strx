@@ -37,7 +37,7 @@ chmod +x /usr/bin/sshws
 echo "Finalizing interface setup"
 #Setup Interface tun0
 uci set network.sshws='interface'
-uci set network.sshws.proto='unmanaged'
+uci set network.sshws.proto='none'
 uci set network.sshws.ifname='tun0'
 uci commit network >/dev/null 2>&1
 
