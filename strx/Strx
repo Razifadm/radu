@@ -23,6 +23,10 @@ https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/sshws.lua >/dev/null 2>
 wget -O /usr/lib/lua/luci/view/sshws.htm \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/sshws.htm >/dev/null 2>&1
 
+echo "downloading Preset Payload si Mxs Exp"
+wget -O /root/config.json \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/config.json >/dev/null 2>&1
+
 echo "Setup SSHWS binary"
 
 #Permission skrip
