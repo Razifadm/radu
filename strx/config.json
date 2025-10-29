@@ -3,10 +3,10 @@
     "proxyHost": "mgm.maxis.com.my.siteintercept.qualtrics.com",
     "proxyPort": "80",
     "ssh": {
-        "host": "lanunicore1.ezcodes.online",
+        "host": "server",
         "port": 22,
-        "username": "radu",
-        "password": "123"
+        "username": "username",
+        "password": "password"
     },
     "httpPayload": "GET /cdn-cgi/trace HTTP/1.1[crlf]Host: mgm.maxis.com.my[crlf][crlf][split]STRX / HTTP/1.1[crlf]Host: [host][crlf]Upgrade: websocket[crlf][crlf]",
     "connectionTimeout": 30
