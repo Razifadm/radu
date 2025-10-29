@@ -34,6 +34,13 @@ chmod +x /etc/init.d/sshws
 chmod +x /etc/init.d/sshws-wrapper
 chmod +x /usr/bin/sshws
 
+#enable services
+/etc/init.d/sshws enable
+/etc/init.d/sshws-wrapper enable
+/etc/init.d/sshws start
+/etc/init.d/sshws-wrapper start
+
+
 echo "Finalizing interface setup"
 #Setup Interface tun0
 uci set network.sshws='interface'
