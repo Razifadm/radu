@@ -13,13 +13,20 @@ function action_sshws()
 
     local config_path = "/root/config.json"
     local cfg = {}
+    local message = nil
 
     -- Baca konfigurasi semasa dari config.json
     if fs.access(config_path) then
         local content = fs.readfile(config_path)
-        if content then
+        if content and content ~= "" then
+            -- Cuba parse JSON. Guna jsonc.parse yang lebih toleran jika ada komen.
             cfg = json.parse(content) or {}
         end
+    end
+    
+    -- Pastikan struktur SSH wujud untuk mengelakkan ralat jika cfg kosong
+    if not cfg.ssh then
+        cfg.ssh = {}
     end
 
     -- Mengendalikan tindakan butang
@@ -27,13 +34,14 @@ function action_sshws()
         -- Muat semula halaman
         http.redirect(luci.dispatcher.build_url("admin/services/sshws"))
         return
+        
     elseif http.formvalue("action") == "save" then
         -- Update JSON fields dari form (borang)
         local newcfg = {
             mode = http.formvalue("mode") or "proxy",
             proxyHost = http.formvalue("proxyHost") or "",
             
-            -- PENTING: Kekalkan proxyPort sebagai STRING ("80") untuk mengelakkan ralat Go unmarshal
+            -- PENTING: Kekalkan proxyPort sebagai STRING ("80")
             proxyPort = http.formvalue("proxyPort") or "80", 
             
             ssh = {
@@ -48,26 +56,25 @@ function action_sshws()
             connectionTimeout = tonumber(http.formvalue("connectionTimeout")) or 30
         }
         
-        -- Tulis konfigurasi baharu ke fail /root/config.json
-        fs.writefile(config_path, json.stringify(newcfg, true))
+        -- ⭐ PERUBAHAN KRITIKAL: Guna json.stringify(newcfg) tanpa parameter 'true'
+        -- Ini menghasilkan JSON yang dirapatkan (minified) tanpa indentation/spacing
+        -- yang menyebabkan masalah dengan binari Go.
+        fs.writefile(config_path, json.stringify(newcfg))
         
-        -- Paparkan mesej kejayaan
-        luci.template.render("sshws", { cfg = newcfg, message = "✅ Konfigurasi disimpan ke /root/config.json" })
-        return
+        cfg = newcfg -- Update cfg untuk paparan borang seterusnya
+        message = "✅ Konfigurasi disimpan ke /root/config.json"
         
     elseif http.formvalue("action") == "start" then
         -- Mulakan/Restart perkhidmatan sshws
         sys.call("/etc/init.d/sshws restart >/dev/null 2>&1 &")
-        luci.template.render("sshws", { cfg = cfg, message = "🟢 SSHWS dimulakan" })
-        return
+        message = "🟢 SSHWS dimulakan"
         
     elseif http.formvalue("action") == "stop" then
         -- Hentikan perkhidmatan sshws
         sys.call("/etc/init.d/sshws stop >/dev/null 2>&1 &")
-        luci.template.render("sshws", { cfg = cfg, message = "🔴 SSHWS dihentikan" })
-        return
+        message = "🔴 SSHWS dihentikan"
     end
 
     -- Paparkan borang konfigurasi
-    luci.template.render("sshws", { cfg = cfg })
+    luci.template.render("sshws", { cfg = cfg, message = message })
 end
