@@ -37,6 +37,7 @@ echo "Setup SSHWS binary"
 chmod +x /etc/init.d/sshws
 chmod +x /etc/init.d/sshws-wrapper
 chmod +x /usr/bin/sshws
+chmod +x /usr/bin/wanip
 
 #enable services
 /etc/init.d/sshws enable
@@ -44,7 +45,7 @@ chmod +x /usr/bin/sshws
 /etc/init.d/sshws start
 /etc/init.d/sshws-wrapper start
 
-#blok tambah watch dog
+##########blok tambah watch dog#############
 cat > /bin/sshwsmon <<'EOF'
 #!/bin/sh -e
 # SSHWS Connection Watchdog - wanip then sshws restart
