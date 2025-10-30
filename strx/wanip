@@ -1,0 +1,57 @@
+#!/bin/sh
+# Skrip untuk kitaran kuasa modem (Modem Power Cycle) dan restart PassWall jika enabled.
+
+# Tentukan peranti (SILA GANTIKAN dengan port/peranti bersiri modem anda yang sebenar)
+DEVICE="/dev/ttyUSB2" 
+
+# ===============================================
+# === Fungsi hantar AT command (VERSI SENYAP) ===
+# ===============================================
+send_at() {
+    CMD="$1"
+    # Menggunakan sms_tool untuk menghantar arahan AT.
+    sms_tool -d "$DEVICE" at "$CMD" >/dev/null 2>&1
+}
+
+# -----------------------------------------------
+# PROSES KEMASKINI IP MODEM
+# -----------------------------------------------
+
+# switch off modem (Mematikan fungsi radio/modem: AT+CFUN=4)
+echo "Loading...1"
+send_at "AT+CFUN=4"
+
+# tunggu 3 saat untuk modem mematikan radio
+sleep 3
+
+# switch on modem (Menghidupkan semula fungsi radio/modem: AT+CFUN=1)
+echo "Loading....2"
+send_at "AT+CFUN=1"
+
+# Beri sedikit masa untuk modem mendaftar ke rangkaian
+sleep 5
+echo "change wwan ip done!"
+
+
+# -----------------------------------------------
+# KAWALAN PERKHIDMATAN PASSWALL
+# -----------------------------------------------
+
+# Semak sama ada perkhidmatan PassWall diaktifkan (enabled)
+# service_enabled() adalah fungsi LuCI/OpenWrt yang disyorkan
+if service_enabled passwall; then
+    echo "PassWall is enabled. Restarting PassWall..."
+    /etc/init.d/passwall restart >/dev/null 2>&1
+else
+    # Jika service_enabled tidak dikenali (jarang berlaku, biasanya ia dikenali), 
+    # anda boleh cuba uci get init/passwall/enabled:
+    if [ "$(uci -q get passwall.@global[0].enabled)" = "1" ]; then
+        echo "PassWall is enabled (UCI check). Restarting PassWall..."
+        /etc/init.d/passwall restart >/dev/null 2>&1
+    else
+        echo "PassWall is not enabled. Skipping restart."
+    fi
+fi
+
+# Pastikan skrip keluar dengan kod 0 (berjaya)
+exit 0
