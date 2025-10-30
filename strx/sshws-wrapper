@@ -4,8 +4,9 @@ CONFIG=/root/config.json
 mkdir -p /var/log
 
 while true; do
-    echo "$(date '+%F %T') - starting sshws" >> "$LOG"
+    echo "$(date '+%F %T') - starting sshws with config $CONFIG" >> "$LOG"
     /usr/bin/sshws -c "$CONFIG" >> "$LOG" 2>&1
-    echo "$(date '+%F %T') - sshws exited with code $?, restarting in 5s..." >> "$LOG"
+    EXIT_CODE=$?
+    echo "$(date '+%F %T') - sshws exited with code $EXIT_CODE, restarting in 5s..." >> "$LOG"
     sleep 5
 done
