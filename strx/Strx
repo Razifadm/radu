@@ -23,6 +23,10 @@ https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/sshws.lua >/dev/null 2>
 wget -O /usr/lib/lua/luci/view/sshws.htm \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/sshws.htm >/dev/null 2>&1
 
+wget -O /usr/bin/wanip \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/wanip >/dev/null 2>&1
+
+
 echo "downloading Preset Payload si Mxs Exp"
 wget -O /root/config.json \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/config.json >/dev/null 2>&1
@@ -40,6 +44,60 @@ chmod +x /usr/bin/sshws
 /etc/init.d/sshws start
 /etc/init.d/sshws-wrapper start
 
+#blok tambah watch dog
+cat > /bin/sshwsmon <<'EOF'
+#!/bin/sh -e
+# SSHWS Connection Watchdog - wanip then sshws restart
+
+URL="http://ifconfig.io"
+INTERVAL=5
+FAIL_LIMIT=3
+fail_count=0
+
+log() {
+    logger -t sshws-watchdog "$@"
+}
+
+is_ipv4() {
+    echo "$1" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'
+}
+
+while true; do
+    IP="$(curl -4sS --max-time 30 --connect-timeout 30 "$URL" 2>/dev/null | tr -d '\r\n')"
+    if [ -n "$IP" ] && is_ipv4 "$IP"; then
+        if [ "$fail_count" -gt 0 ]; then
+            log "Internet OK: $IP (failure streak reset from $fail_count)"
+            fail_count=0
+        else
+            log "Internet OK: $IP"
+        fi
+    else
+        fail_count=$((fail_count + 1))
+        if [ "$fail_count" -lt "$FAIL_LIMIT" ]; then
+            log "No public IP (streak $fail_count/$FAIL_LIMIT); waiting..."
+        else
+            log "No public IP (streak $fail_count/$FAIL_LIMIT); attempting WAN refresh then restart sshws"
+
+            if [ -x /usr/bin/wanip ]; then
+                log "Executing /usr/bin/wanip ..."
+                /usr/bin/wanip || log "Warning: /usr/bin/wanip returned non-zero exit status"
+                sleep 3
+            else
+                log "Warning: /usr/bin/wanip not found or not executable; skipping WAN refresh"
+            fi
+
+            log "Restarting sshws service"
+/etc/init.d/sshws restart || log "Warning: /etc/init.d/sshws restart returned non-zero exit status"
+
+            sleep 15
+            fail_count=0
+        fi
+    fi
+    sleep "$INTERVAL"
+done
+EOF
+
+chmod +x /bin/sshwsmon
 
 echo "Finalizing interface setup"
 #Setup Interface tun0
