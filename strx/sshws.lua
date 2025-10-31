@@ -12,17 +12,20 @@ function action_sshws()
     local http = require "luci.http"
 
     local config_path = "/root/config.json"
+    local log_file = "/var/log/sshws.log" -- LOKASI FAIL LOG
+    local log_lines = 25 -- Bilangan baris log yang akan dipaparkan
     local cfg = {}
     local message = nil
+    local log_content = nil
 
     -- 1. Ambil mesej status dari URL (untuk PRG)
     local status_msg = http.formvalue("msg")
     if status_msg == "start_ok" then
-        message = "🟢 SSHWS Started."
+        message = "✅ SSHWS Started."
     elseif status_msg == "stop_ok" then
-        message = "🔴 SSHWS Stopped."
+        message = "🛑 SSHWS Stopped."
     elseif status_msg == "save_ok" then
-        message = "✅ Config Saved to /root/config.json"
+        message = "💾 Config Saved to /root/config.json"
     end
 
     -- 2. Baca konfigurasi semasa dari config.json
@@ -59,6 +62,7 @@ function action_sshws()
     
     -- 4. Mengendalikan tindakan butang (POST)
     if http.formvalue("action") == "reload" then
+        -- Action reload kini akan memuat semula halaman (refresh log dan status)
         http.redirect(luci.dispatcher.build_url("admin/services/sshws"))
         return
         
@@ -80,25 +84,41 @@ function action_sshws()
         
         fs.writefile(config_path, json.stringify(newcfg))
         
-        -- ⭐ PRG: Redirect ke URL dengan mesej status
+        -- PRG: Redirect ke URL dengan mesej status
         http.redirect(luci.dispatcher.build_url("admin/services/sshws") .. "?msg=save_ok")
         return
         
     elseif http.formvalue("action") == "start" then
+        -- PASTIKAN SKRIP INIT MENGARAHKAN LOG KE /var/log/sshws.log
         sys.call("/etc/init.d/sshws restart >/dev/null 2>&1 &")
         
-        -- ⭐ PRG: Redirect ke URL dengan mesej status
+        -- PRG: Redirect ke URL dengan mesej status
         http.redirect(luci.dispatcher.build_url("admin/services/sshws") .. "?msg=start_ok")
         return
         
     elseif http.formvalue("action") == "stop" then
         sys.call("/etc/init.d/sshws stop >/dev/null 2>&1 &")
         
-        -- ⭐ PRG: Redirect ke URL dengan mesej status
+        -- PRG: Redirect ke URL dengan mesej status
         http.redirect(luci.dispatcher.build_url("admin/services/sshws") .. "?msg=stop_ok")
         return
     end
 
-    -- 5. Paparkan borang konfigurasi
-    luci.template.render("sshws", { cfg = cfg, message = message })
+    -- 5. BACA KANDUNGAN LOG (Kod Baru)
+    -- Gunakan 'tail' untuk membaca N baris terakhir fail log. 2>/dev/null untuk abaikan ralat jika fail tidak wujud.
+    log_content = sys.exec("tail -n " .. log_lines .. " " .. log_file .. " 2>/dev/null")
+    
+    if not log_content or log_content == "" then
+      log_content = "Log file is empty or not found at " .. log_file .. ". Sila pastikan skrip init /etc/init.d/sshws anda mengarahkan output log ke lokasi ini."
+    end
+    
+    -- 6. Paparkan borang konfigurasi
+    -- Hantar log_content, log_file, dan log_lines ke template
+    luci.template.render("sshws", { 
+        cfg = cfg, 
+        message = message, 
+        log_content = log_content,
+        log_lines = log_lines,
+        log_file = log_file
+    })
 end
