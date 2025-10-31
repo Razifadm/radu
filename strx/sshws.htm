@@ -3,6 +3,11 @@
   -- Tentukan status sambungan
   local is_connected = not (cfg.wan_ip:find("Failed") or cfg.wan_ip:find("Check"))
   local status_class = is_connected and "is-connected" or "is-disconnected"
+  
+  -- Ambil pemboleh ubah log dari lua controller
+  local log_content = log_content or "Loading log..."
+  local log_lines = log_lines or 25
+  local log_file = log_file or "/var/log/sshws.log"
 %>
 <style>
   /* --- Gaya Asas --- */
@@ -64,6 +69,17 @@
       display: block;
       margin-top: 2px;
   }
+  /* Gaya Log */
+  .log-textarea {
+      font-family: monospace; 
+      background: #0c0c10; 
+      color: #00ffaa; 
+      border: 1px solid #333; 
+      padding: 10px; 
+      overflow-y: scroll;
+      /* Penting untuk memaparkan format baris log dengan betul */
+      white-space: pre; 
+  }
 
   /* --- Keyframes untuk Animasi "Beating Light" --- */
   @keyframes pulse {
@@ -105,7 +121,7 @@
       <span class="sshws-label">Proxy Host</span>
       <input type="text" name="proxyHost" value="<%=cfg.proxyHost or ''%>">
     </div>
-<div class="sshws-field">
+    <div class="sshws-field">
       <span class="sshws-label">Proxy Port</span>
       <input type="number" name="proxyPort" value="<%=cfg.proxyPort or ''%>">
     </div>
@@ -139,11 +155,16 @@
       <span class="sshws-label">Connection Timeout</span>
       <input type="number" name="connectionTimeout" value="<%=cfg.connectionTimeout or ''%>">
     </div>
-
+    
+    <fieldset class="sshws-field" style="margin-top:20px;">
+      <legend><b>Service Log (Last <%=log_lines%> lines) 📜</b></legend>
+      <textarea readonly rows="12" class="log-textarea" style="width: 100%;"><%=log_content or ''%></textarea>
+      <p style="font-size: 0.85em; color: #888;">Log file: <%=log_file%></p>
+    </fieldset>
     <div style="margin-top:20px;">
-      <button class="btn btn-reload" name="action" value="reload">Load Current Config</button>
+      <button class="btn btn-reload" name="action" value="reload">Refresh Status & Log</button>
       <button class="btn btn-save" name="action" value="save">Save</button>
-      <button class="btn btn-start" name="action" value="start">▶️</button>
+      <button class="btn btn-start" name="action" value="start">▶️ Start</button>
       <button class="btn btn-stop" name="action" value="stop">Stop</button>
     </div>
   </form>
