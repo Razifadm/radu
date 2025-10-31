@@ -9,7 +9,7 @@ echo "Luci"ed" by @Raducksijaa"
 echo "Downloading sshws"
 #1. Download fail dan skrip
 wget -O /usr/bin/sshws \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/bin/sshws >/dev/null 2>&1
+https://raw.githubusercontent.com/Razifadm/radu/ipk/bin/sshws >/dev/null 2>&1
 
 wget -O /etc/init.d/sshws \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/sshws >/dev/null 2>&1
