@@ -1,5 +1,11 @@
 <%+header%>
+<%
+  -- Tentukan status sambungan
+  local is_connected = not (cfg.wan_ip:find("Failed") or cfg.wan_ip:find("Check"))
+  local status_class = is_connected and "is-connected" or "is-disconnected"
+%>
 <style>
+  /* --- Gaya Asas --- */
   .sshws-section { background: #1a1a1f; padding: 20px; border-radius: 12px; color: #eee; }
   .sshws-section h2 { color: #00e0c7; }
   .sshws-field { margin-bottom: 12px; }
@@ -14,6 +20,63 @@
   .btn-stop { background: #dc3545; color: white; }
   .btn:hover { opacity: 0.85; }
   .message { margin-bottom: 15px; padding: 10px; border-radius: 6px; background: #222; color: #0f0; }
+
+  /* --- Gaya Network Information --- */
+  .network-status-box {
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid transparent; /* Asas */
+  }
+
+  /* KONDISI: ADA INTERNET (HIJAU + BEATING LIGHT) */
+  .is-connected {
+    background-color: #0d3b36; /* Hijau gelap sebagai asas */
+    border-color: #00e0c7;
+    animation: pulse 2s infinite; /* Animasi diterapkan di sini */
+  }
+  .is-connected .wan-ip, .is-connected .isp-name {
+    color: #00ffaa; /* Hijau muda/mint */
+  }
+
+  /* KONDISI: TIADA INTERNET (MERAH/PINK) */
+  .is-disconnected {
+    background-color: #4d001a; /* Merah gelap/Maroon sebagai asas */
+    border-color: #ff6347; /* Tomato Red/Pinkish */
+  }
+  .is-disconnected .wan-ip, .is-disconnected .isp-name {
+    color: #ff9999; /* Pink muda/Merah muda */
+  }
+  
+  /* Styling IP dan ISP */
+  .wan-data {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+  }
+  .data-field {
+      flex: 1;
+      padding: 5px 0;
+  }
+  .wan-ip, .isp-name {
+      font-weight: 700;
+      font-size: 1.1em;
+      display: block;
+      margin-top: 2px;
+  }
+
+  /* --- Keyframes untuk Animasi "Beating Light" --- */
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(0, 255, 170, 0.5); /* Hijau muda */
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(0, 255, 170, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(0, 255, 170, 0);
+    }
+  }
 </style>
 
 <div class="sshws-section">
@@ -23,13 +86,26 @@
     <div class="message"><%=message%></div>
   <% end %>
 
+  <fieldset class="sshws-field network-status-box <%=status_class%>">
+    <legend><b>Network sshws status 🌐</b></legend>
+    
+    <div class="wan-data">
+        <div class="data-field">
+            <span class="sshws-label">WAN IP</span>
+            <span class="wan-ip"><%=cfg.wan_ip or 'Loading...'%></span>
+        </div>
+        <div class="data-field">
+            <span class="sshws-label">ISP</span>
+            <span class="isp-name"><%=cfg.isp_name or 'Loading...'%></span>
+        </div>
+    </div>
+  </fieldset>
   <form method="post" action="<%=url('admin/services/sshws')%>">
     <div class="sshws-field">
       <span class="sshws-label">Proxy Host</span>
       <input type="text" name="proxyHost" value="<%=cfg.proxyHost or ''%>">
     </div>
-
-    <div class="sshws-field">
+<div class="sshws-field">
       <span class="sshws-label">Proxy Port</span>
       <input type="number" name="proxyPort" value="<%=cfg.proxyPort or ''%>">
     </div>
