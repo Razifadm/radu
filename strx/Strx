@@ -14,8 +14,8 @@ https://raw.githubusercontent.com/Razifadm/radu/ipk/bin/sshws >/dev/null 2>&1
 wget -O /etc/init.d/sshws \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/sshws >/dev/null 2>&1
 
-wget -O /etc/init.d/sshws-wrapper \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/sshws-wrapper >/dev/null 2>&1
+#wget -O /etc/init.d/sshws-wrapper \
+#https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/sshws-wrapper >/dev/null 2>&1
 
 wget -O /usr/lib/lua/luci/controller/sshws.lua \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/strx/sshws.lua >/dev/null 2>&1
@@ -41,9 +41,9 @@ chmod +x /usr/bin/wanip
 
 #enable services
 /etc/init.d/sshws enable
-/etc/init.d/sshws-wrapper enable
+#/etc/init.d/sshws-wrapper enable
 /etc/init.d/sshws start
-/etc/init.d/sshws-wrapper start
+#/etc/init.d/sshws-wrapper start
 
 ##########blok tambah watch dog#############
 cat > /bin/sshwsmon <<'EOF'
