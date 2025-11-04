@@ -13,7 +13,7 @@ rm -f /var/lock/opkg.lock
 echo ""
 echo "==========================================="
 echo "Which Xray-Core to install?:"
-echo "1. xray latest "
+echo "1. xray patched by strx "
 echo "2. xray multipath (xray1.7.5)"
 echo "==========================================="
 read -p "pick choice" xray_choice
@@ -23,7 +23,7 @@ echo ""
 case $xray_choice in
     1)
         XRAY_URL="https://raw.githubusercontent.com/Razifadm/radu/ipk/xray"
-        echo "user choose xray latest"
+        echo "User choose patched xray"
         ;;
     2)
         XRAY_URL="https://raw.githubusercontent.com/Razifadm/radu/ipk/xray175"
