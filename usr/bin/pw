@@ -22,7 +22,7 @@ echo ""
 # Tentukan URL berdasarkan pilihan pengguna
 case $xray_choice in
     1)
-        XRAY_URL="https://raw.githubusercontent.com/Razifadm/radu/ipk/xray"
+        XRAY_URL="https://raw.githubusercontent.com/Razifadm/radu/ipk/xray-baru"
         echo "User choose patched xray"
         ;;
     2)
