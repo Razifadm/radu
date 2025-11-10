@@ -86,6 +86,10 @@ rm -f /usr/share/passwall/rules/chnroute6
 rm -f /usr/share/passwall/rules/chnroute
 rm -f /usr/share/passwall/rules/chnlist
 
+#setup xray pathway for passwall 1
+uci set passwall.@global_app[0].xray_file='/usr/bin/xray'
+uci commit passwall
+sleep 1
 
 # Reload LuCI cache
 echo "Applying final installation.."
