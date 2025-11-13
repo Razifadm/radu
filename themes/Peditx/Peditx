@@ -1,0 +1,11 @@
+#!/bin/sh
+
+#flow install
+#download luci-app-peditx
+#install peditx
+#sleep sekejap
+#download config etc/config/peditx
+#echo done installation
+
+
+https://github.com/peditx/luci-theme-peditx/releases/download/v1.2.3/luci-theme-peditx_1.2.3-01_all.ipk
