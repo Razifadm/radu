@@ -16,11 +16,11 @@ wget -O /tmp/luci-theme-peditx_1.2.3-01_all.ipk \https://github.com/peditx/luci-
 
 #opkg install theme peditx
 echo "Installing themes-Peditx"
-opkg install /tmp/luci-theme-peditx.ipk
+opkg install /tmp/luci-theme-peditx_1.2.3-01_all.ipk
 sleep 1
 
 #remove ipk
-rm -f /tmp/luci-theme-peditx.ipk 
+rm -f /tmp/luci-theme-peditx_1.2.3-01_all.ipk
 
 #Download config
 wget -O /etc/config/peditx \ https://raw.githubusercontent.com/Razifadm/radu/ipk/config/peditx >/dev/null 2>&1
