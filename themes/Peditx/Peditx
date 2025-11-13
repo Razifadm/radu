@@ -7,5 +7,7 @@
 #download config etc/config/peditx
 #echo done installation
 
+#link format download
+# wget -O /tmp/peditx \ https://raw.githubusercontent.com/Razifadm/radu/ipk/Themes/Peditx/Peditx && chmod +x /tmp/peditx && /tmp/peditx
 
 https://github.com/peditx/luci-theme-peditx/releases/download/v1.2.3/luci-theme-peditx_1.2.3-01_all.ipk
