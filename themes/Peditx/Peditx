@@ -16,7 +16,7 @@ rm -f /tmp/luci-theme-peditx_1.2.3-01_all.ipk
 
 # Download config peditx
 wget -O /etc/config/peditx \
-https://raw.githubusercontent.com/Razifadm/radu/main/ipk/config/peditx >/dev/null 2>&1
+https://raw.githubusercontent.com/Razifadm/radu/ipk/config/peditx >/dev/null 2>&1
 
 # Restart web UI
 /etc/init.d/uhttpd restart
