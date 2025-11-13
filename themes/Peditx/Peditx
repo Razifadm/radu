@@ -1,31 +1,25 @@
 #!/bin/sh
 
-echo "📦this will install luci-theme-Peditx"
+echo "📦 this will install luci-theme-Peditx"
 
-#download luci-app-peditx
-#install peditx
-#sleep sekejap
-#download config etc/config/peditx
-#echo done installation
+# Download ipk
+wget -O /tmp/luci-theme-peditx_1.2.3-01_all.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/main/ipk/themes/Peditx/luci-theme-peditx_1.2.3-01_all.ipk >/dev/null 2>&1
 
-#link format download
-# wget -O /tmp/peditx \https://raw.githubusercontent.com/Razifadm/radu/ipk/themes/Peditx/Peditx && chmod +x /tmp/peditx && /tmp/peditx
-
-#Download ipk
-wget -O /tmp/luci-theme-peditx_1.2.3-01_all.ipk \https://github.com/Razifadm/radu/ipk/luci-theme-peditx_1.2.3-01_all.ipk >/dev/null 2>&1
-
-#opkg install theme peditx
+# Pasang theme
 echo "Installing themes-Peditx"
 opkg install /tmp/luci-theme-peditx_1.2.3-01_all.ipk
 sleep 1
 
-#remove ipk
+# Buang fail sementara
 rm -f /tmp/luci-theme-peditx_1.2.3-01_all.ipk
 
-#Download config
-wget -O /etc/config/peditx \ https://raw.githubusercontent.com/Razifadm/radu/ipk/config/peditx >/dev/null 2>&1
+# Download config peditx
+wget -O /etc/config/peditx \
+https://raw.githubusercontent.com/Razifadm/radu/main/ipk/config/peditx >/dev/null 2>&1
 
-#restart webui
+# Restart web UI
 /etc/init.d/uhttpd restart
 
+# Hapus skrip selepas jalan
 rm -f "$0" >/dev/null 2>&1
