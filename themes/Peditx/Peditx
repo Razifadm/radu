@@ -3,8 +3,8 @@
 echo "📦 this will install luci-theme-Peditx"
 
 # Download ipk
-wget -O /tmp/luci-theme-peditx_1.2.3-01_all.ipk \
-https://raw.githubusercontent.com/Razifadm/radu/main/ipk/themes/Peditx/luci-theme-peditx_1.2.3-01_all.ipk >/dev/null 2>&1
+wget -O /tmp/luci-theme-peditx_1.2.3-01_all.ipk
+https://raw.githubusercontent.com/Razifadm/radu/main/ipk/themes/Peditx/luci-theme-peditx_1.2.3-01_all.ipk
 
 # Pasang theme
 echo "Installing themes-Peditx"
