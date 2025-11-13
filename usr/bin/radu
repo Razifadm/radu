@@ -3,7 +3,7 @@
 # --- Script Version and Update Information ---
 # IMPORTANT: Increment this SCRIPT_VERSION every time you push a new version
 # to your GitHub repository.
-SCRIPT_VERSION="0.8" # CURRENT VERSION OF THIS SCRIPT
+SCRIPT_VERSION="0.9" # CURRENT VERSION OF THIS SCRIPT
 SCRIPT_URL="https://raw.githubusercontent.com/Razifadm/radu/main/usr/bin/radu"
 SCRIPT_PATH="/usr/bin/radu"
 
@@ -91,10 +91,10 @@ while true; do
             break
             ;;
         6) 
-           echo "Memasang ChaseNSS-STRX"
-           echo "SABAR MAT ALON"
-#           wget -q -O /tmp/installer http://abidarwi.sh/SINIUBAHURL.sh && chmod 755 /tmp/installer && /tmp/installer
-           ;;
+            echo "Memasang ChaseNSS-STRX"
+            wget -q -O /tmp/installer http://abidarwi.sh/chasenssstrx13112025.sh && chmod 755 /tmp/installer && /tmp/installer
+            break
+            ;;
         *)
             echo "Pilihan tidak sah."
             ;;
