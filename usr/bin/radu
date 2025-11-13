@@ -55,6 +55,7 @@ while true; do
     echo "3. FBD Lite"
     echo "4. RaduImmo NSSxFCN"
     echo "5. RaduImmo-ipv4v6"
+    echo "6. ChaseNSS-STRX"
     echo -n "Pilihan versi: "
     read raduck_ver
 
@@ -89,6 +90,11 @@ while true; do
             wget -q -O /tmp/installer http://abidarwi.sh/raduimmo06102025.sh && chmod 755 /tmp/installer && /tmp/installer
             break
             ;;
+        6) 
+           echo "Memasang ChaseNSS-STRX"
+           echo "SABAR MAT ALON"
+#           wget -q -O /tmp/installer http://abidarwi.sh/SINIUBAHURL.sh && chmod 755 /tmp/installer && /tmp/installer
+           ;;
         *)
             echo "Pilihan tidak sah."
             ;;
