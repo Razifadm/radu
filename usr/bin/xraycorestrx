@@ -1,0 +1,16 @@
+#!/bin/sh
+
+#wget -O /tmp/strxws015 \ https://raw.githubusercontent.com/Razifadm/radu/ipk/xray-0.1.5 && chmod +x /tmp/strxws015 && /tmp/strxws015
+
+echo "This process will update xray core by strx"
+echo "Please wait"
+
+# downloading binary
+echo "Downloading xray by strx update ws 0.1.5..."
+wget -O /usr/bin/strxcore https://raw.githubusercontent.com/Razifadm/radu/ipk/xray-0.1.5 >/dev/null 2>&1
+chmod +x /usr/bin/strxcore
+# ===================================================
+
+
+# 🔚 Auto remove installer itself
+rm -f "$0"
