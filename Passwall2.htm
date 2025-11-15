@@ -1,0 +1,251 @@
+<style>
+/* --- Gaya SSHWS yang disalin --- */
+/* Gaya ini bertanggungjawab untuk penampilan kotak IP */
+.sshws-section { background: #1a1a1f; padding: 20px; border-radius: 12px; color: #eee; }
+
+/* Gaya Network Information - DIKECILKAN */
+.network-status-box {
+    border-radius: 8px;
+    padding: 10px; /* Pengecilan padding */
+    margin-bottom: 5px; /* Pengecilan margin */
+    border: 1px solid transparent;
+    display: flex;
+    flex-direction: column;
+    width: 400px; /* Pengecilan lebar kotak */
+    font-size: 0.9em; /* Pengecilan saiz fon */
+}
+
+/* KONDISI: ADA INTERNET (UNGU BARU + BEATING LIGHT) */
+.is-connected {
+    background-color: #3f005a; /* Ungu gelap */
+    border-color: #e000ff; /* Ungu terang */
+    animation: pulse-purple 2s infinite; /* Guna animasi Ungu */
+}
+.is-connected .wan-ip, .is-connected .isp-name {
+    color: #ffccff;
+}
+
+/* KONDISI: TIADA INTERNET (MERAH) */
+.is-disconnected {
+    background-color: #4d001a; /* Merah gelap */
+    border-color: #ff6347;
+}
+.is-disconnected .wan-ip, .is-disconnected .isp-name {
+    color: #ff9999;
+}
+
+/* Styling IP dan ISP */
+.wan-data {
+    display: flex;
+    flex-direction: column; /* Ubah ke susunan vertikal */
+    gap: 2px;
+}
+.data-field {
+    padding: 2px 0;
+    display: flex;
+    align-items: center;
+}
+.wan-ip, .isp-name {
+    font-weight: 700;
+    display: inline; /* Agar sebaris dengan label */
+    margin-top: 0;
+    margin-left: 5px;
+    font-size: 1em;
+}
+.sshws-label {
+    font-weight: 400;
+    color: #ccc;
+    white-space: nowrap; /* Pastikan label tidak putus baris */
+}
+
+/* --- Gaya Bendera dan Tajuk (Baru) --- */
+.status-header {
+    display: flex;
+    align-items: center;
+    /* KINI FLAG DI KANAN DAN KANDUNGAN LAIN DI KIRI */
+    justify-content: space-between; 
+    margin-bottom: 5px;
+}
+.status-header .header-content-left {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Jarak antara ikon dan teks */
+}
+.status-header legend {
+    font-weight: bold;
+    color: #fff;
+    margin: 0;
+}
+.status-header .network-icon {
+    font-size: 1.2em;
+}
+
+.flag-icon-container {
+    /* UBAH SAIZ (3x Ganda) */
+    width: 72px; 
+    height: 54px; 
+    overflow: hidden;
+    border: 1px solid #333;
+    border-radius: 2px;
+}
+
+.flag-icon-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Keyframes untuk Animasi "Beating Light" (Ungu) */
+@keyframes pulse-purple {
+    0% { box-shadow: 0 0 0 0 rgba(224, 0, 255, 0.5); }
+    70% { box-shadow: 0 0 0 8px rgba(224, 0, 255, 0); } /* Saiz shadow dikurangkan */
+    100% { box-shadow: 0 0 0 0 rgba(224, 0, 255, 0); }
+}
+
+/* Gaya Status Bar PassWall */
+.status-bar {
+    position: fixed;
+    /* Dikekalkan pada 120px untuk mengelakkan butang Save&Apply tertindih */
+    bottom: 120px; 
+    right: 0;
+    box-shadow: 0 0 2rem 0 rgba(136, 152, 170, .3);
+    color: #525f7f;
+    background: transparent; 
+    z-index: 5;
+    box-sizing: border-box;
+}
+
+
+.status-bar .inner {
+    margin: 0.5em;
+    padding: 0;
+}
+</style>
+
+<div class="status-bar">
+    <div class="inner">
+        <fieldset class="sshws-field network-status-box is-disconnected">
+            <div class="status-header">
+                <div class="header-content-left">
+                    <span class="network-icon">🌐</span>
+                    <legend><b>Network Status</b></legend>
+                </div>
+                
+                <span class="flag-icon-container">
+                    <img src="/luci-static/passwall2/flags/loading.svg" class="pure-img flag-img-target">
+                </span>
+            </div>
+            
+            <div class="wan-data">
+                <div class="data-field">
+                    <span class="sshws-label">IP:</span>
+                    <span class="wan-ip">Fetching..</span>
+                </div>
+                <div class="data-field">
+                    <span class="sshws-label">ISP:</span>
+                    <span class="isp-name">Fetching...</span>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="pure-g" style="display:none;">
+            </div>
+    </div>
+</div>
+
+<script>
+// ---------- KOD JAVASCRIPT PASSWALL (VERSI PASSWALL 2) ----------
+const _ASSETS = '/luci-static/passwall2/';
+
+// URL API yang betul untuk PassWall 2
+const CHECK_IP_URL = '<%=url([[admin]], [[services]], [[passwall2]], [[ip]])%>'; 
+
+function write_status(data) {
+    console.log("Data diterima PassWall:", data);
+    
+    let wanIpEl = document.querySelector(".wan-ip");
+    let ispNameEl = document.querySelector(".isp-name");
+    let statusBox = document.querySelector(".network-status-box");
+    let flagImg = document.querySelector(".flag-img-target"); 
+
+    // Mengambil data ISP penuh (Negara / ISP)
+    const currentIP = data.ip || 'Gagal Mendapatkan IP';
+    const currentISP = (data.country && data.isp) ? data.country + " / " + data.isp : 'Gagal Mendapatkan Info';
+
+    // 1. Kemas Kini IP & ISP
+    if (wanIpEl) { wanIpEl.innerHTML = currentIP; }
+    // Untuk 'ISP:', hanya tunjukkan nama ISP dan Negara
+    if (ispNameEl) { ispNameEl.innerHTML = (data.country && data.isp) ? `${data.country} / ${data.isp}` : 'Memuatkan...'; }
+
+    // 2. Kemas Kini Bendera
+    if (flagImg && data.flag) {
+         // Menggunakan data.flag yang diterima (cth: "sg")
+         flagImg.src = _ASSETS + "flags/" + data.flag + ".svg";
+    }
+
+    // 3. Logik Status Bersambung / Terputus (Ungu/Merah)
+    if (statusBox) {
+        if (currentIP.indexOf("Failed") === -1 && currentIP.indexOf("Check") === -1 && currentIP.indexOf("Gagal") === -1 && currentIP.indexOf("Ralat") === -1) {
+            // Jika IP berjaya didapatkan (KONDISI UNGU)
+            statusBox.classList.remove("is-disconnected");
+            statusBox.classList.add("is-connected");
+        } else {
+            // Jika IP gagal didapatkan (KONDISI MERAH)
+            statusBox.classList.remove("is-connected");
+            statusBox.classList.add("is-disconnected");
+        }
+    }
+    
+    setTimeout(function() {
+        let event = new Event('iploaded');
+        document.body.dispatchEvent(event);
+    }, 200);
+}
+
+// FUNGSI POLLING LUCI (XHR.poll)
+XHR.poll(5, CHECK_IP_URL, null,
+    function (x, data) {
+        write_status(data);
+    }
+);
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Panggilan Muatan Awal (Initial Load)
+    fetch(CHECK_IP_URL)
+        .then(response => {
+             if (!response.ok) {
+                 throw new Error('HTTP status ' + response.status); 
+             }
+             return response.json();
+        })
+        .then(data => {
+            write_status(data);
+        })
+        .catch(error => {
+             console.error('Ralat Panggilan Awal IP:', error);
+             
+             let statusBox = document.querySelector(".network-status-box");
+             if (statusBox) {
+                 statusBox.classList.remove("is-connected");
+                 statusBox.classList.add("is-disconnected");
+                 let wanIpEl = document.querySelector(".wan-ip");
+                 let ispNameEl = document.querySelector(".isp-name");
+                 if (wanIpEl) { wanIpEl.innerHTML = 'Ralat API!'; }
+                 if (ispNameEl) { ispNameEl.innerHTML = 'Gagal Sambung'; }
+             }
+        });
+});
+
+// Fungsi resize LuCI asal
+function resize() {
+    let wW = window.innerWidth;
+    let lw = document.querySelector(".main-left")?.offsetWidth ?? 5;
+    let statusBar = document.querySelector(".status-bar");
+    if (statusBar) {
+        statusBar.style.width = (wW - lw) + 'px';
+    }
+}
+window.addEventListener('resize', resize);
+// ---------- TAMAT KOD JAVASCRIPT ----------
+</script>
+
