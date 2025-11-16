@@ -1,17 +1,17 @@
 #!/bin/sh
 
 #wget -O /tmp/strxcore https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/strxcore && chmod +x /tmp/strxcore && /tmp/strxcore
-#wget -O /tmp/strxcore https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/strxcore && chmod +x /tmp/strxcore && /tmp/strxcore
 XRAY_BINARY="xray-0.1.5"
-TMP_FILE="/tmp/xraycorebaru"
+SCRIPT_PATH="/tmp/install.sh"
+TMP_XRAY="/tmp/xraycorebaru"
 
 echo "updating xray core to latest version"
-wget -O "$TMP_FILE" https://raw.githubusercontent.com/Razifadm/radu/ipk/"$XRAY_BINARY"  >/dev/null 2>&1 
+wget -O "$TMP_XRAY" https://raw.githubusercontent.com/Razifadm/radu/ipk/"$XRAY_BINARY"  >/dev/null 2>&1 
 
-if [ ! -s "$TMP_FILE" ]; then
+if [ ! -s "$TMP_XRAY" ]; then
     echo "❌ Download failed or empty file!"
     echo "⚠️ Update aborted."
-    rm -f "$TMP_FILE"
+    rm -f "$TMP_XRAY"
     exit 1
 fi
 
@@ -23,7 +23,7 @@ sleep 1 >/dev/null 2>&1
 #remove current xray and replace with new one
 rm -rf /usr/bin/xray
 rm -rf /usr/bin/strxcore
-mv $TMP_FILE /usr/bin/strxcore >/dev/null 2>&1 
+mv $TMP_XRAY /usr/bin/strxcore >/dev/null 2>&1 
 
 #chmod permission new xray, strxcore
 chmod +x /usr/bin/strxcore >/dev/null 2>&1 
