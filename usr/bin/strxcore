@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#wget -O /tmp/strxcore \ https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/strxcore && chmod +x /tmp/strxcore && /tmp/strxcore
+#wget -O /tmp/strxcore https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/strxcore && chmod +x /tmp/strxcore && /tmp/strxcore
 XRAY_BINARY="xray-baru"
 TMP_FILE="/tmp/strxcore"
 
