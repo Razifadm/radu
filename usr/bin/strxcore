@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #wget -O /tmp/strxcore \ https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/strxcore && chmod +x /tmp/strxcore && /tmp/strxcore
-XRAY_BINARY="xray-0.1.5"
+XRAY_BINARY="xray175"
 TMP_FILE="/tmp/strxcore"
 
 echo "updating xray core to latest version"
