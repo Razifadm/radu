@@ -37,4 +37,5 @@ uci commit passwall2
 echo "core updated to $XRAY_BINARY"
 echo "xray path set to /usr/bin/strxcore"
 echo "if you are using passwall1/2 please restart it!!"
+strxcore --version
 rm -f "$0"
