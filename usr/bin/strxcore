@@ -1,0 +1,39 @@
+#!/bin/sh
+
+#wget -O /tmp/strxcore \ https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/strxcore && chmod +x /tmp/strxcore && /tmp/strxcore
+XRAY_BINARY="xray-0.1.5"
+TMP_FILE="/tmp/strxcore"
+
+echo "updating xray core to latest version"
+wget -O "$TMP_FILE" https://raw.githubusercontent.com/Razifadm/radu/ipk/"$XRAY_BINARY"  >/dev/null 2>&1 
+
+if [ ! -s "$TMP_FILE" ]; then
+    echo "❌ Download failed or empty file!"
+    echo "⚠️ Update aborted."
+    rm -f "$TMP_FILE"
+    exit 1
+fi
+
+#stop passwall services
+/etc/init.d/passwall stop >/dev/null 2>&1 
+/etc/init.d/passwall2 stop >/dev/null 2>&1 
+sleep 1 >/dev/null 2>&1 
+
+#remove current xray and replace with new one
+rm -rf /usr/bin/xray
+rm -rf /usr/bin/strxcore
+mv /tmp/strxcore /usr/bin/strxcore >/dev/null 2>&1 
+
+#chmod permission new xray, strxcore
+chmod +x /usr/bin/strxcore >/dev/null 2>&1 
+
+#setting xray path to strxcore
+uci set passwall.@global_app[0].xray_file='/usr/bin/strxcore'
+uci set passwall2.@global_app[0].xray_file='/usr/bin/strxcore'
+uci commit passwall
+uci commit passwall2
+
+echo "core updated to $XRAY_BINARY"
+echo "xray path set to /usr/bin/strxcore"
+echo "if you are using passwall1/2 please restart it!!"
+rm -f "$0"
