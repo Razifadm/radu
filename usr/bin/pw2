@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#wget -O /tmp/pw2 \ https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/pw2 && chmod +x /tmp/pw2 && /tmp/pw2
+#wget -O /tmp/pw2 https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/pw2 && chmod +x /tmp/pw2 && /tmp/pw2
 XRAY_URL="https://raw.githubusercontent.com/Razifadm/radu/ipk/xray-0.1.5"
 
 echo "Installing Passwall2 Banner IP"
