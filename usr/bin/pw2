@@ -17,32 +17,23 @@ chmod +x /usr/bin/strxcore
 
 # 📦 Download ipk
 echo "Downloading Passwall2"
-wget -O /etc/luci-app-passwall2.ipk \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-passwall2.ipk >/dev/null 2>&1
+wget -O /etc/luci-app-passwall2.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-passwall2.ipk >/dev/null 2>&1
 
-wget -O /etc/coreutils-nohup.ipk \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/coreutils-nohup.ipk >/dev/null 2>&1
+wget -O /etc/coreutils-nohup.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/coreutils-nohup.ipk >/dev/null 2>&1
 
-wget -O /etc/resolveip.ipk \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/resolveip.ipk >/dev/null 2>&1
+wget -O /etc/resolveip.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/resolveip.ipk >/dev/null 2>&1
 
-wget -O /etc/v2ray-geoip.ipk \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/v2ray-geoip.ipk >/dev/null 2>&1
+wget -O /etc/v2ray-geoip.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/v2ray-geoip.ipk >/dev/null 2>&1
 
-wget -O /etc/v2ray-geosite.ipk \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/v2ray-geosite.ipk >/dev/null 2>&1
+wget -O /etc/v2ray-geosite.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/v2ray-geosite.ipk >/dev/null 2>&1
 
-wget -O /etc/geoview.ipk \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/geoview.ipk >/dev/null 2>&1
+wget -O /etc/geoview.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/geoview.ipk >/dev/null 2>&1
 
-wget -O /etc/dns2socks.ipk \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/dns2socks.ipk >/dev/null 2>&1
+wget -O /etc/dns2socks.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/dns2socks.ipk >/dev/null 2>&1
 
-wget -O /etc/dns2tcp.ipk \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/dns2tcp.ipk >/dev/null 2>&1
+wget -O /etc/dns2tcp.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/dns2tcp.ipk >/dev/null 2>&1
 
-wget -O /etc/tcping.ipk \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/tcping.ipk >/dev/null 2>&1
+wget -O /etc/tcping.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/tcping.ipk >/dev/null 2>&1
 
 # ⚙️ Install the new package
 echo "Installing apps..."
@@ -52,8 +43,9 @@ echo "Installing apps..."
 /etc/init.d/passwall2 stop
 sleep 1
 
-#remove current passwall2 ipk 
+#remove current passwall2 ipk dan remove current xray
 opkg remove luci-app-passwall2 
+rm -f /usr/bin/xray >/dev/null 2>&1
 sleep 1
 
 # 🧹 2nd Remove opkg lock kalau tersangkut
