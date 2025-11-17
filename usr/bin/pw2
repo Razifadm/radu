@@ -1,0 +1,103 @@
+#!/bin/sh
+
+#wget -O /tmp/pw2 \ https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/pw2 && chmod +x /tmp/pw2 && /tmp/pw2
+XRAY_URL="https://raw.githubusercontent.com/Razifadm/radu/ipk/xray-0.1.5"
+
+echo "Installing Passwall2 Banner IP"
+
+# 🧹 Remove opkg lock kalau tersangkut
+rm -f /var/lock/opkg.lock
+
+
+# downloading binary
+echo "Downloading patched xray core by @stdstrx..."
+wget -O /usr/bin/strxcore "$XRAY_URL" >/dev/null 2>&1
+chmod +x /usr/bin/strxcore
+# ===================================================
+
+# 📦 Download ipk
+echo "Downloading Passwall2"
+wget -O /etc/luci-app-passwall2.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-passwall2.ipk >/dev/null 2>&1
+
+wget -O /etc/coreutils-nohup.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/coreutils-nohup.ipk >/dev/null 2>&1
+
+wget -O /etc/resolveip.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/resolveip.ipk >/dev/null 2>&1
+
+wget -O /etc/v2ray-geoip.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/v2ray-geoip.ipk >/dev/null 2>&1
+
+wget -O /etc/v2ray-geosite.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/v2ray-geosite.ipk >/dev/null 2>&1
+
+wget -O /etc/geoview.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/geoview.ipk >/dev/null 2>&1
+
+wget -O /etc/dns2socks.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/dns2socks.ipk >/dev/null 2>&1
+
+wget -O /etc/dns2tcp.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/dns2tcp.ipk >/dev/null 2>&1
+
+wget -O /etc/tcping.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/tcping.ipk >/dev/null 2>&1
+
+# ⚙️ Install the new package
+echo "Installing apps..."
+
+#stopping all passwall services
+/etc/init.d/passwall stop
+/etc/init.d/passwall2 stop
+sleep 1
+
+#remove current passwall2 ipk 
+opkg remove luci-app-passwall2 
+sleep 1
+
+# 🧹 2nd Remove opkg lock kalau tersangkut
+rm -f /var/lock/opkg.lock
+
+# Pasang semua .ipk dalam /etc/
+for pkg in /etc/*.ipk; do
+    [ -f "$pkg" ] && opkg install "$pkg" >/dev/null 2>&1
+    sleep 1
+done
+
+#echo "Finalizing installation"
+wget -O /etc/config/passwall2 \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/config/passwall2 >/dev/null 2>&1
+uci commit passwall2
+
+#delete rules passwall
+rm -f /usr/share/passwall/rules/proxy_ip
+rm -f /usr/share/passwall/rules/proxy_host
+rm -f /usr/share/passwall/rules/domains_excluded
+rm -f /usr/share/passwall/rules/direct_ip
+rm -f /usr/share/passwall/rules/direct_host
+rm -f /usr/share/passwall/rules/block_ip
+rm -f /usr/share/passwall/rules/block_host
+rm -f /usr/share/passwall/rules/gfwlist
+rm -f /usr/share/passwall/rules/chnroute6
+rm -f /usr/share/passwall/rules/chnroute
+rm -f /usr/share/passwall/rules/chnlist
+
+#setup xray pathway for passwall 2
+uci set passwall2.@global_app[0].xray_file='/usr/bin/strxcore'
+uci commit passwall2
+sleep 1
+
+# Reload LuCI cache
+echo "Applying final installation Passwall2.."
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1
+/etc/init.d/rpcd restart >/dev/null 2>&1
+
+echo "=== DONE!>> Passwall 2 Installed<< ==="
+strxcore --version
+
+# 🔚 Auto remove installer itself
+# Padam selepas pemasangan
+rm -f /etc/*.ipk
+rm -f "$0"
+
