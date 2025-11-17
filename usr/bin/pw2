@@ -41,6 +41,7 @@ echo "Installing apps..."
 #stopping all passwall services
 /etc/init.d/passwall stop >/dev/null 2>&1
 /etc/init.d/passwall2 stop >/dev/null 2>&1
+/etc/init.d/passwall2 stop >/dev/null 2>&1
 sleep 1
 
 #remove current passwall2 ipk dan remove current xray
