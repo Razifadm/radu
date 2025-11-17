@@ -18,21 +18,13 @@ chmod +x /usr/bin/strxcore
 # 📦 Download ipk
 echo "Downloading Passwall2"
 wget -O /etc/luci-app-passwall2.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-passwall2.ipk >/dev/null 2>&1
-
 wget -O /etc/coreutils-nohup.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/coreutils-nohup.ipk >/dev/null 2>&1
-
 wget -O /etc/resolveip.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/resolveip.ipk >/dev/null 2>&1
-
 wget -O /etc/v2ray-geoip.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/v2ray-geoip.ipk >/dev/null 2>&1
-
 wget -O /etc/v2ray-geosite.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/v2ray-geosite.ipk >/dev/null 2>&1
-
 wget -O /etc/geoview.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/geoview.ipk >/dev/null 2>&1
-
 wget -O /etc/dns2socks.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/dns2socks.ipk >/dev/null 2>&1
-
 wget -O /etc/dns2tcp.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/dns2tcp.ipk >/dev/null 2>&1
-
 wget -O /etc/tcping.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/tcping.ipk >/dev/null 2>&1
 
 # ⚙️ Install the new package
@@ -59,9 +51,6 @@ for pkg in /etc/*.ipk; do
 done
 
 #echo "Finalizing installation"
-wget -O /etc/config/passwall2 \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/config/passwall2 >/dev/null 2>&1
-uci commit passwall2
 
 #delete rules passwall
 rm -f /usr/share/passwall/rules/proxy_ip
@@ -77,7 +66,7 @@ rm -f /usr/share/passwall/rules/chnroute
 rm -f /usr/share/passwall/rules/chnlist
 
 #setup xray pathway for passwall 2
-uci set passwall2.@global_app[0].xray_file='/usr/bin/strxcore'
+wget -O /etc/config/passwall2 https://raw.githubusercontent.com/Razifadm/radu/ipk/config/passwall2 >/dev/null 2>&1
 uci commit passwall2
 sleep 1
 
