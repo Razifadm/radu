@@ -44,7 +44,7 @@ echo "Installing apps..."
 sleep 1
 
 #remove current passwall2 ipk dan remove current xray
-opkg remove luci-app-passwall2 
+opkg remove luci-app-passwall2 >/dev/null 2>&1
 rm -f /usr/bin/xray >/dev/null 2>&1
 sleep 1
 
