@@ -52,7 +52,6 @@ esac
 # ⬇️ Download Process
 echo ""
 echo "## ⬇️ Downloading Firmware and QFirehose"
-echo "📥 Downloading firmware from: $MODULE_URL"
 
 # Download module ZIP file
 wget -O "$MODULE_ZIP" "$MODULE_URL" >/dev/null 2>&1
