@@ -1,5 +1,5 @@
 #!/bin/sh
-#wget -O /tmp/updatem https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/updatem && chmod +x /usr/bin/updatem && /usr/bin/updatem
+#wget -O /tmp/updatem https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/updatem && chmod +x /tmp/updatem && /tmp/updatem
 
 # ==========================================================
 # RG500QE Module Firmware Flasher Script
