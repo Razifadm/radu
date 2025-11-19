@@ -6,9 +6,11 @@ echo "Steering of GBPS"
 opkg update >/dev/null 2>&1
 opkg install wget >/dev/null 2>&1
 
+rm-f /etc/init.d/qca-nss-ecm >/dev/null 2>&1
+sleep 1
 wget -q -O /etc/init.d/qca-nss-ecm \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/qca-nss-ecm >/dev/null 2>&1
-
+sleep 1
 uci set network.globals.packet_steering='2' >/dev/null 2>&1
 uci set network.globals.steering_flows='1024' >/dev/null 2>&1
 uci set firewall.@defaults[0].flow_offloading='1' >/dev/null 2>&1
@@ -16,5 +18,5 @@ uci set firewall.@defaults[0].flow_offloading_hw='1' >/dev/null 2>&1
 uci commit firewall >/dev/null 2>&1
 /etc/init.d/firewall restart >/dev/null 2>&1
 uci commit network >/dev/null 2>&1
-
+echo "Setup Completed"
 rm -f "$0" >/dev/null 2>&1
