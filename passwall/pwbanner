@@ -17,7 +17,7 @@ sleep 1
 #rm -f /usr/lib/lua/luci/view/passwall/global/status_bottom.htm >/dev/null 2>&1
 wget -O /usr/lib/lua/luci/view/passwall/global/status_bottom.htm https://raw.githubusercontent.com/Razifadm/radu/ipk/passwall/status.htm >/dev/null 2>&1
 
-wget -O /tmp/passwall1.zip https://raw.githubusercontent.com/Razifadm/radu/ipk/passwall/passwall1.zip >/dev/null 2>&1 && unzip -o /tmp/passwall1.zip -d /www/luci-static
+wget -O /tmp/passwall1.zip https://raw.githubusercontent.com/Razifadm/radu/ipk/passwall/passwall1.zip >/dev/null 2>&1 && unzip -o /tmp/passwall1.zip -d /www/luci-static >/dev/null 2>&1
 
 
 /etc/init.d/uhttpd restart >/dev/null 2>&1
