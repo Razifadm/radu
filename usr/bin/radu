@@ -12,7 +12,7 @@ echo "Updating software list"
 
 # ❌ Remove vnstat2 related packages
 echo "Removing vnstat2 packages..."
-opkg remove --force-depends --autoremove vnstat vnstat2 vnstati2 luci-app-vnstat2 luci-app-vnstat luci-app-netstats
+opkg remove --force-depends --autoremove vnstat vnstat2 vnstati2 luci-app-vnstat2 luci-app-vnstat luci-app-netstat
 
 # 🧹 Second lock cleanup
 rm -f /var/lock/opkg.lock
