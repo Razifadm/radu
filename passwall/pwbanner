@@ -6,15 +6,15 @@ echo "This Process will install Banner IP on Passwall webui"
 echo""
 echo "Downloading Passwall Banner"
 
-rm -f /usr/lib/lua/luci/controller/passwall.lua >/dev/null 2>&1
+#rm -f /usr/lib/lua/luci/controller/passwall.lua >/dev/null 2>&1
 wget -O /usr/lib/lua/luci/controller/passwall.lua https://raw.githubusercontent.com/Razifadm/radu/ipk/passwall/passwall.lua >/dev/null 2>&1
 sleep 1
 
-rm -f /usr/lib/lua/luci/model/cbi/passwall/client/global.lua >/dev/null 2>&1
+#rm -f /usr/lib/lua/luci/model/cbi/passwall/client/global.lua >/dev/null 2>&1
 wget -O /usr/lib/lua/luci/model/cbi/passwall/client/global.lua https://raw.githubusercontent.com/Razifadm/radu/ipk/passwall/global.lua >/dev/null 2>&1
 sleep 1
 
-rm -f /usr/lib/lua/luci/view/passwall/global/status_bottom.htm >/dev/null 2>&1
+#rm -f /usr/lib/lua/luci/view/passwall/global/status_bottom.htm >/dev/null 2>&1
 wget -O /usr/lib/lua/luci/view/passwall/global/status_bottom.htm https://raw.githubusercontent.com/Razifadm/radu/ipk/passwall/status.htm >/dev/null 2>&1
 
 
