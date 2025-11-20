@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#wget -O /tmp/pwb https://raw.githubusercontent.com/Razifadm/radu/ipk/pwbanner && chmod +x /tmp/pwb && /tmp/pwb
+#wget -O /tmp/pwb https://raw.githubusercontent.com/Razifadm/radu/ipk/passwall/pwbanner && chmod +x /tmp/pwb && /tmp/pwb
 
 echo "This Process will install Banner IP on Passwall webui"
 echo""
