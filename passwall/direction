@@ -1,0 +1,8 @@
+global.lua 
+/usr/lib/lua/luci/model/cbi/passwall/client
+
+status_bottom.htm
+/usr/lib/lua/luci/view/passwall/global
+
+passwall.lua
+/usr/lib/lua/luci/controller
