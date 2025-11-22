@@ -1,0 +1,106 @@
+#!/bin/sh
+
+#wget -O /usr/bin/pw4668 \ https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/pw4668 && chmod +x /usr/bin/pw4668 && /usr/bin/pw4668
+
+echo "Installing Passwall-AutoSwitch"
+
+# 🧹 Remove opkg lock kalau tersangkut
+rm -f /var/lock/opkg.lock
+
+# ===================================================
+# ⭐️ PILIHAN XRAY INTERAKTIF
+# ===================================================
+echo ""
+echo "==========================================="
+echo "Which Xray-Core to install?:"
+echo "1. xray patched by strx "
+echo "2. xray multipath (xray1.7.5)"
+echo "==========================================="
+read -p "pick choice" xray_choice
+echo ""
+
+# Tentukan URL berdasarkan pilihan pengguna
+case $xray_choice in
+    1)
+        XRAY_URL="https://raw.githubusercontent.com/Razifadm/radu/ipk/xray-baru"
+        echo "User choose patched xray"
+        ;;
+    2)
+        XRAY_URL="https://raw.githubusercontent.com/Razifadm/radu/ipk/xray175"
+        echo "user choose multipath"
+        ;;
+    *)
+        XRAY_URL="https://raw.githubusercontent.com/Razifadm/radu/ipk/xray" 
+        echo "invalid choice, proceed with latest xray core"
+        ;;
+esac
+
+# downloading binary
+echo "Downloading xray binary..."
+wget -O /usr/bin/xray "$XRAY_URL" >/dev/null 2>&1
+chmod +x /usr/bin/xray
+# ===================================================
+
+# 📦 Download ipk
+echo "Downloading Passwall"
+wget -O /etc/luci-app-passwall_4.67.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-passwall_4.67.ipk >/dev/null 2>&1
+
+wget -O /etc/dns2socks.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/dns2socks.ipk >/dev/null 2>&1
+
+wget -O /etc/dns2tcp.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/dns2tcp.ipk >/dev/null 2>&1
+
+wget -O /etc/tcping.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/tcping.ipk >/dev/null 2>&1
+
+wget -O /etc/microsocks.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/microsocks.ipk >/dev/null 2>&1
+
+
+# ⚙️ Install the new package
+echo "Installing apps..."
+
+# Pasang semua .ipk dalam /etc/
+for pkg in /etc/*.ipk; do
+    [ -f "$pkg" ] && opkg install "$pkg" >/dev/null 2>&1
+    sleep 1
+done
+
+# Padam selepas pemasangan
+rm -f /etc/*.ipk
+
+echo "Finalizing installation"
+wget -O /etc/config/passwall \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/config/passwall >/dev/null 2>&1
+wget -O /etc/config/passwall_server \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/config/passwall_server >/dev/null 2>&1
+
+#delete rules passwall
+rm -f /usr/share/passwall/rules/proxy_ip
+rm -f /usr/share/passwall/rules/proxy_host
+rm -f /usr/share/passwall/rules/domains_excluded
+rm -f /usr/share/passwall/rules/direct_ip
+rm -f /usr/share/passwall/rules/direct_host
+rm -f /usr/share/passwall/rules/block_ip
+rm -f /usr/share/passwall/rules/block_host
+rm -f /usr/share/passwall/rules/gfwlist
+rm -f /usr/share/passwall/rules/chnroute6
+rm -f /usr/share/passwall/rules/chnroute
+rm -f /usr/share/passwall/rules/chnlist
+
+#setup xray pathway for passwall 1
+uci set passwall.@global_app[0].xray_file='/usr/bin/xray'
+uci commit passwall
+sleep 1
+
+# Reload LuCI cache
+echo "Applying final installation.."
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1
+/etc/init.d/rpcd restart >/dev/null 2>&1
+
+echo "=== DONE!>> Passwall Installed<< ==="
+
+# 🔚 Auto remove installer itself
+rm -f "$0"
