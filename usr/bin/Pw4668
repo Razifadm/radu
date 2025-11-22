@@ -43,8 +43,8 @@ chmod +x /usr/bin/xray
 
 # 📦 Download ipk
 echo "Downloading Passwall"
-wget -O /etc/luci-app-passwall_4.67.ipk \
-https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-passwall_4.67.ipk >/dev/null 2>&1
+wget -O /etc/luci-app-passwall4668.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-passwall4668..ipk >/dev/null 2>&1
 
 wget -O /etc/dns2socks.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/dns2socks.ipk >/dev/null 2>&1
