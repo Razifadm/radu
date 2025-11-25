@@ -428,7 +428,7 @@ return baseclass.extend({
 				line-height: 1.5;
 				margin-top: 5px; /* Jarakkan dari kotak IP */
 			`
-		}, isMinimized ? '▲' : '▼'); // ▲ untuk Maximize, ▼ untuk Minimize
+		}, isMinimized ? '♤♤♤' : '◇◇◇'); // ▲ untuk Maximize, ▼ untuk Minimize
 
 		toggleButton.addEventListener('click', function() {
 			isMinimized = !isMinimized;
