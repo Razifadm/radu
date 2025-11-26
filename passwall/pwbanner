@@ -2,7 +2,7 @@
 
 #wget -O /tmp/pwb https://raw.githubusercontent.com/Razifadm/radu/ipk/passwall/pwbanner && chmod +x /tmp/pwb && /tmp/pwb
 
-opkg list-installed | grep -q "luci-app-passwall - 4\.67" || { echo "❌ luci-app-passwall not version 4.67 — STOPPED!"; exit 1; }
+#opkg list-installed | grep -q "luci-app-passwall - 4\.67" || { echo "❌ luci-app-passwall not version 4.67 — STOPPED!"; exit 1; }
 
 echo "This Process will install Banner IP on Passwall webui"
 echo""
