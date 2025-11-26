@@ -2,12 +2,11 @@
 'require baseclass';
 'require fs';
 
-// 1. PEMBOLEH UBAH GLOBAL
 let prev = {};
 let last_time = Date.now();
 let ipVisible = localStorage.getItem('ipVisible') !== 'false';
-let isMinimized = localStorage.getItem('isMinimized') === 'true'; 
 let currentIface = '';
+let isMinimized = localStorage.getItem('netstatMinimized') !== 'false';
 
 (function loadDynamicCSS() {
 	function isDarkMode() {
@@ -127,7 +126,6 @@ function formatRate(bits) {
 		bits /= 1000;
 		i++;
 	}
-	// Mengira nilai Mbps dengan tepat
 	let valueMbps = 0;
 	if (i === 2) {
 		valueMbps = bits;
@@ -152,9 +150,6 @@ function formatSize(bytes) {
 
 /**
  * Menentukan warna teks berdasarkan kadar kelajuan (dalam Mbps).
- * @param {number} rateMbps Kadar kelajuan dalam Mbps.
- * @param {string} type 'download' atau 'upload' untuk logik yang berbeza.
- * @returns {string} Kod warna CSS.
  */
 function getRateTextColor(rateMbps, type) {
 	if (type !== 'download') {
@@ -163,95 +158,74 @@ function getRateTextColor(rateMbps, type) {
 
 	// Logik warna nombor Download
 	if (rateMbps > 600) {
-		return 'red'; // >600mbps - warna teks warna merah
+		return 'red';
 	} else if (rateMbps > 450) {
-		return 'green'; // >450mbps - warna teks hijau
+		return 'green';
 	} else if (rateMbps > 250) {
-		return 'deeppink'; // >250mbps - warna teks warna pink
+		return 'deeppink';
 	} else if (rateMbps > 100) {
-		return 'orange'; // >100mbps - nombor teks warna orange
+		return 'orange';
 	} else {
 		return 'white'; // Default: Putih
 	}
 }
 
 /**
- * Mendapatkan warna latar belakang untuk kotak 'WAN Interface' berdasarkan kadar kelajuan.
- * @param {number} rateMbps Kadar kelajuan dalam Mbps.
- * @returns {string} Kod warna latar belakang CSS.
- */
-function getIfaceBoxColor(rateMbps) {
-    if (rateMbps > 600) {
-        return '#CC0000'; // Merah gelap
-    } else if (rateMbps > 450) {
-        return '#008000'; // Hijau gelap
-    } else if (rateMbps > 250) {
-        return '#C71585'; // Pink gelap
-    } else if (rateMbps > 100) {
-        return '#FF8C00'; // Oren gelap
-    } else {
-        return '#607D8B'; // Kelabu/Default
-    }
-}
-
-/**
- * Membuat kad statistik tanpa badge antaramuka.
- * @param {string} label Label kad (e.g., 'DOWNLOAD').
- * @param {string} valueNum Nilai nombor.
- * @param {string} valueUnit Unit nilai.
- * @param {string} color Warna latar belakang kad.
- * @param {number} rateMbps Kadar kelajuan dalam Mbps (hanya untuk Download/Upload).
- * @param {string} type 'rate' atau 'total'.
- * @returns {HTMLElement} Elemen kad.
+ * Membuat kad statistik.
  */
 function createStatCard(label, valueNum, valueUnit, color, rateMbps = 0, type = 'rate') {
 	let numberColor = 'inherit';
-	let unitColor = 'white'; // Semua unit kelajuan/saiz sekarang putih
+	let unitColor = 'white';	
+	const shadowStyle = 'text-shadow: 1px 1px 2px #000000;';
+	
+	let bgStyle = '';
+	
+	// Tentukan latar belakang separuh telus berdasarkan label (Download/Upload)
+	const isDownload = label.includes(_('DOWNLOAD')) || label.includes(_('Download'));
+	const isUpload = label.includes(_('UPLOAD')) || label.includes(_('Upload'));
+
+	if (isDownload) {
+		// Hijau (R: 76, G: 175, B: 80) dengan 50% opacity
+		bgStyle = 'background-color: rgba(76, 175, 80, 0.5); border-radius: 4px; padding: 0 4px;';
+	} else if (isUpload) {
+		// Biru (R: 33, G: 150, B: 243) dengan 50% opacity
+		bgStyle = 'background-color: rgba(33, 150, 243, 0.5); border-radius: 4px; padding: 0 4px;';
+	}
+
 
 	if (type === 'rate') {
+		// Logik warna nombor kelajuan
 		if (label === _('DOWNLOAD')) {
 			numberColor = getRateTextColor(rateMbps, 'download');
 		} else if (label === _('UPLOAD')) {
-			numberColor = getRateTextColor(rateMbps, 'upload'); 
+			numberColor = getRateTextColor(rateMbps, 'upload');	
 		}
 	} else {
-		// Total RX/TX juga menggunakan warna putih untuk nombor
 		numberColor = 'white';
 	}
 
-	return E('div', { class: 'stats-card', style: `background-color: ${color}; box-shadow: none;` }, [
-		E('div', { class: 'stat-label' }, label),
+	return E('div', { class: 'stats-card', style: `background-color: transparent; box-shadow: none;` }, [
+		E('div', { class: 'stat-label', style: shadowStyle }, label),
 		E('div', { class: 'stat-value' }, [
-			E('span', { class: 'stat-number', style: `color: ${numberColor};` }, valueNum),
+			E('span', { class: 'stat-number', style: `color: ${numberColor}; ${shadowStyle} ${bgStyle}` }, valueNum),
 			E('br'),
-			E('span', { class: 'stat-unit', style: `color: ${unitColor};` }, valueUnit)
+			E('span', { class: 'stat-unit', style: `color: ${unitColor}; ${shadowStyle}` }, valueUnit)
 		]),
 	]);
 }
 
 /**
- * Membuat kad antaramuka WAN yang baru dengan warna kotak berdasarkan kelajuan download.
- * @param {string} iface Nama antaramuka WAN.
- * @param {string} backend Backend yang digunakan (vnstat/normal).
- * @param {number} rxRateMbps Kadar kelajuan Download dalam Mbps.
- * @returns {HTMLElement} Elemen kad antaramuka.
+ * Menggabungkan Kad Antaramuka WAN dan Kad IP Awam.
+ * Ini menggantikan createIfaceCard dan createIPCard yang asal.
  */
-function createIfaceCard(iface, backend, rxRateMbps) {
-	const ifaceLabel = backend === 'vnstat' ? iface + ' (vnstat)' : iface;
-    const boxColor = getIfaceBoxColor(rxRateMbps);
+function createCombinedIPCard(iface, backend, ip, org) {
+	const shadowStyle = 'text-shadow: 1px 1px 2px #000000;';
+	
+	// Warna latar belakang separuh telus
+	const ipBgColor = 'rgba(128, 0, 128, 0.5)'; // Ungu (Purple) 50% opacity
+	const ifaceBgColor = 'rgba(96, 125, 139, 0.5)'; // Kelabu (Grey 50%) 50% opacity
 
-	return E('div', {
-		class: 'iface-card full-width',
-		style: `background-color: ${boxColor}; color: white; margin-top: 15px; margin-bottom: 15px; padding: 8px 10px; border-radius: 4px; text-align: center; box-shadow: none;`
-	}, [
-		E('div', { class: 'iface-label', style: 'font-size: 10px; opacity: 0.8;' }, _('WAN Interface')),
-		E('div', { class: 'iface-value', style: 'font-size: 16px; font-weight: bold;' }, ifaceLabel)
-	]);
-}
-
-
-function createIPCard(ip, org) { 
-	const ipVal = E('div', { class: 'ip-value', id: 'ip-value' }, ipVisible ? ip : '**********');
+	const ipVal = E('span', { class: 'ip-value', id: 'ip-value', style: shadowStyle }, ipVisible ? ip : '**********');
 	const eyeIcon = E('img', {
 		src: ipVisible
 			? '/luci-static/resources/netstat/eye-outline.svg'
@@ -275,20 +249,35 @@ function createIPCard(ip, org) {
 			: '/luci-static/resources/netstat/eye-off-outline.svg';
 	});
 
-	// Logik warna kotak IP (Ungu/Magenta Gelap)
-    const hasIP = (ip && ip !== 'Unavailable' && ip !== '**********');
-    const boxColor = hasIP ? '#800080' : '#F44336'; 
+	// Elemen WAN Interface (Bahagian Atas) - Background Kelabu 50%
+	const ifaceLabel = backend === 'vnstat' ? iface + ' (vnstat)' : iface;
+	const ifaceCard = E('div', {
+		class: 'iface-card',
+		style: `background-color: ${ifaceBgColor}; color: white; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center; margin: 0; box-shadow: none; border-bottom: 1px solid rgba(0, 0, 0, 0.2);`
+	}, [
+		E('div', { class: 'iface-label', style: `font-size: 10px; opacity: 0.8; ${shadowStyle}` }, _('WAN Interface')),
+		E('div', { class: 'iface-value', style: `font-size: 16px; font-weight: bold; ${shadowStyle}` }, ifaceLabel)
+	]);
 
-	// KAD IP SAIZ ASAL TANPA BUTTON TOGGLE DI DALAM
-	return E('div', { 
-		class: 'ip-card full-width', 
-		style: `background-color: ${boxColor}; color: white; box-shadow: none;` // Kekalkan style asal
+	// Elemen IP/ISP (Bahagian Bawah) - Background Ungu 50%
+	const ipCard = E('div', { 
+		class: 'ip-card', 
+		style: `background-color: ${ipBgColor}; color: white; padding: 8px 10px; border-radius: 0 0 4px 4px; text-align: center; box-shadow: none;`
 	}, [
 		E('div', { class: 'ip-line' }, [ipVal, eye]),
-		E('div', { class: 'ip-org', style: 'color: white;' }, org), 
-		E('div', { class: 'bubble yellow' })
+		E('div', { class: 'ip-org', style: `color: white; ${shadowStyle}; font-size: 12px; opacity: 0.8;` }, org), 
+	]);
+
+	// Kad Gabungan
+	return E('div', {
+		class: 'combined-card full-width',
+		style: 'margin-top: 15px; margin-bottom: 15px; border-radius: 4px; overflow: hidden; box-shadow: none;'
+	}, [
+		ifaceCard,
+		ipCard
 	]);
 }
+
 
 return baseclass.extend({
 	title: _(''),
@@ -392,81 +381,96 @@ return baseclass.extend({
 		let rxLabel, txLabel;
 		if (data.backend === 'vnstat') {
 			if (data.mode === 'daily') {
-				rxLabel = _('Daily RX');
-				txLabel = _('Daily TX');
+				rxLabel = _('Daily Download');
+				txLabel = _('Daily Upload');
 			} else if (data.mode === 'monthly') {
-				rxLabel = _('Monthly RX');
-				txLabel = _('Monthly TX');
+				rxLabel = _('Monthly Download');
+				txLabel = _('Monthly Upload');
 			} else {
-				rxLabel = _('Total RX');
-				txLabel = _('Total TX');
+				rxLabel = _('Total Download');
+				txLabel = _('Total Upload');
 			}
 		} else {
-			rxLabel = _('Total RX');
-			txLabel = _('Total TX');
+			rxLabel = _('Total Download');
+			txLabel = _('Total Upload');
 		}
-		
-		// 2. KAD IP (Sentiasa kelihatan)
-		const ipCard = createIPCard(data.ipData?.ip || 'Unavailable', data.ipData?.network?.autonomous_system?.name || 'Unknown');
-		
-		// 3. BUTANG TOGGLE BARU (Arrow Down/Up) - Diletakkan di luar IP Card
-		const toggleButton = E('span', { 
-			class: 'toggle-minimize-arrow', 
-			title: isMinimized ? _('Maximize') : _('Minimize'),
-			style: `
-				cursor: pointer; 
-				font-size: 18px; 
-				position: absolute; 
-				top: 100%; /* Letak di hujung bawah kotak IP */
-				left: 50%; 
-				transform: translateX(-50%) translateY(-50%); /* Sentiasa tengah bawah */
-				background: #700070; 
-				border-radius: 4px; /* Buat ia berbentuk pil */
-				padding: 0px 8px;
-				color: white;
-				z-index: 10;
-				line-height: 1.5;
-				margin-top: 5px; /* Jarakkan dari kotak IP */
-			`
-		}, isMinimized ? '♤♤♤' : '◇◇◇'); // ▲ untuk Maximize, ▼ untuk Minimize
 
-		toggleButton.addEventListener('click', function() {
-			isMinimized = !isMinimized;
-			localStorage.setItem('isMinimized', isMinimized);
-			window.location.reload(); 
-		}.bind(this));
-		
-		// 4. WRAPPER UTAMA KOTAK IP (untuk membolehkan kedudukan relatif)
-		const ipCardWrapper = E('div', { 
-			class: 'ip-card-wrapper',
-			style: 'position: relative; margin-bottom: 20px;' // Margin-bottom untuk ruang butang
-		}, [ipCard, toggleButton]);
-		
-		
-		// 5. KAD STATISTIK LAIN (Hanya kelihatan jika TIDAK diminimakan)
-		const statsGrid = E('div', { 
-			class: 'stats-grid',
-			style: isMinimized ? 'display: none;' : '' // Sembunyikan Grid
-		});
-		
-		// Baris 1: Kelajuan Download dan Upload
-		statsGrid.appendChild(createStatCard(_('DOWNLOAD'), rxRate.number, rxRate.unit, '#4CAF50', rxRate.valueMbps, 'rate')); 
-		statsGrid.appendChild(createStatCard(_('UPLOAD'), txRate.number, txRate.unit, '#2196F3', txRate.valueMbps, 'rate')); 
-		
-		// Baris 2: Total RX dan Total TX
-		statsGrid.appendChild(createStatCard(rxLabel, rxTotal.number, rxTotal.unit, '#4CAF50', 0, 'total')); 
-		statsGrid.appendChild(createStatCard(txLabel, txTotal.number, txTotal.unit, '#2196F3', 0, 'total')); 
+		let container = document.getElementById('netstat-container');	
+		if (!container) {
+			container = E('div', { id: 'netstat-container', style: 'position: relative;' });
+		} else {
+			while (container.firstChild) {
+				container.removeChild(container.firstChild);
+			}
+		}
 
-		// Tambah Kad WAN Interface (warna berdasarkan rxRate.valueMbps)
-		const wanCardWrapper = E('div', { class: 'full-width' });
-		wanCardWrapper.appendChild(createIfaceCard(iface, data.backend, rxRate.valueMbps));
-		statsGrid.appendChild(wanCardWrapper);
-		
-		// 6. KANDUNGAN UTAMA WIDGET
-		const mainContent = E('div', { class: 'netstat-widget-container' }, [
-			ipCardWrapper,
-			statsGrid
+		// Cipta Butang Toggle
+		const toggleButtonIcon = E('span', { class: 'toggle-icon', style: 'margin-right: 5px;' }, isMinimized ? '▶' : '▼');
+		const toggleButtonText = isMinimized ? _('') : _('');
+			
+		const toggleButton = E('button', {
+			class: 'btn',
+			style: 'position: absolute; top: -35px; right: 0; cursor: pointer; background: transparent; border: none; color: inherit; font-weight: bold; font-size: 14px;',
+			title: toggleButtonText,
+		}, [
+			toggleButtonIcon,
+			toggleButtonText
 		]);
+			
+		toggleButton.addEventListener('click', () => {
+			isMinimized = !isMinimized;
+			localStorage.setItem('netstatMinimized', isMinimized);
+				
+			// Lakukan render semula secara manual untuk kemas kini UI
+			const currentContainer = document.getElementById('netstat-container');
+			if (currentContainer) {
+				const parent = currentContainer.parentNode;
+				if (parent) {
+					parent.removeChild(currentContainer);
+					parent.appendChild(this.render(data));	
+				}
+			}
+		});
+			
+		container.appendChild(toggleButton);
+
+		// Logik paparan berdasarkan isMinimized
+		if (!isMinimized) {
+			// **MODE MAXIMIZE**
+			const grid = E('div', { class: 'stats-grid' });
+				
+			// Baris 1: Kelajuan Download dan Upload
+			grid.appendChild(createStatCard(_('DOWNLOAD'), rxRate.number, rxRate.unit, '#4CAF50', rxRate.valueMbps, 'rate'));
+			grid.appendChild(createStatCard(_('UPLOAD'), txRate.number, txRate.unit, '#2196F3', txRate.valueMbps, 'rate'));
+				
+			// Baris 2: Total RX dan Total TX
+			grid.appendChild(createStatCard(rxLabel, rxTotal.number, rxTotal.unit, '#4CAF50', 0, 'total'));
+			grid.appendChild(createStatCard(txLabel, txTotal.number, txTotal.unit, '#2196F3', 0, 'total'));
+		
+			// Guna Kad Gabungan
+			const combinedCardWrapper = E('div', { class: 'full-width' });
+			combinedCardWrapper.appendChild(createCombinedIPCard(
+				iface,
+				data.backend,
+				data.ipData?.ip || 'Unavailable',
+				data.ipData?.network?.autonomous_system?.name || 'Unknown'
+			));
+			grid.appendChild(combinedCardWrapper);
+				
+			container.appendChild(grid);
+
+		} else {
+			// **MODE MINIMIZE (Hanya papar Kad Gabungan)**
+			const combinedCardWrapper = E('div', { class: 'full-width', style: 'margin-top: -30px;' });
+			combinedCardWrapper.appendChild(createCombinedIPCard(
+				iface,
+				data.backend,
+				data.ipData?.ip || 'Unavailable',
+				data.ipData?.network?.autonomous_system?.name || 'Unknown'
+			));
+			container.appendChild(combinedCardWrapper);
+		}
+
 
 		let vnstatLastUpdate = 0;
 
@@ -483,6 +487,7 @@ return baseclass.extend({
 			return fs.read_direct('/proc/net/dev')
 				.then(raw => {
 					const updated = parseStats(raw);
+					// PENTING: Panggil render() semula dengan data yang dikemas kini
 					return this.render({
 						netStats: updated,
 						ipData: data.ipData,
@@ -496,6 +501,6 @@ return baseclass.extend({
 
 		}, 1000);
 
-		return mainContent;
+		return container;
 	}
 });
