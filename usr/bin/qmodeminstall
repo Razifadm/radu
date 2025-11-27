@@ -3,7 +3,7 @@
 echo "Welcome to Qmodem installation"
 
 #Download Qmodem zip
-wget -O /tmp/qmodem.zip https://raw.githubusercontent.com/Razifadm/radu/ipk/Qmodem.zip
+wget -O /tmp/qmodem.zip https://raw.githubusercontent.com/Razifadm/radu/ipk/QModem.zip
 
 echo "loading.."
 
