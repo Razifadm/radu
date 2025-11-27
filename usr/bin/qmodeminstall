@@ -1,0 +1,32 @@
+#!/bin/sh
+
+echo "Welcome to Qmodem installation"
+
+#Download Qmodem zip
+wget -O /tmp/qmodem.zip https://raw.githubusercontent.com/Razifadm/radu/ipk/Qmodem.zip
+
+echo "loading.."
+
+
+# 📦 Unzip Installation
+echo "## 📦 Validating Packages"
+# Check unzip installed or install
+if ! command -v unzip >/dev/null 2>&1; then
+    echo "📦 'unzip' not found. Attempting installation via opkg..."
+    opkg update >/dev/null 2>&1
+    opkg install unzip >/dev/null 2>&1
+fi
+
+echo "loading..."
+
+mkdir -p /tmp/qmodemipk
+unzip -o /tmp/qmodem.zip -d /tmp/qmodemipk
+
+echo "loading..."
+
+#install ipk
+opkg install /tmp/qmodemipk
+
+echo "loading...."
+
+
