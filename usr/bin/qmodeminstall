@@ -25,8 +25,12 @@ unzip -o /tmp/qmodem.zip -d /tmp/qmodemipk
 echo "loading..."
 
 #install ipk
-opkg install /tmp/qmodemipk
+opkg install /tmp/qmodemipk/*.ipk
 
 echo "loading...."
+
+rm -f /tmp/qmodemipk
+
+echo "Installation done!!"
 
 
