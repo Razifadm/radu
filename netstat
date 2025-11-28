@@ -215,15 +215,13 @@ function createStatCard(label, valueNum, valueUnit, color, rateMbps = 0, type = 
 }
 
 /**
- * Menggabungkan Kad Antaramuka WAN dan Kad IP Awam.
- * Ini menggantikan createIfaceCard dan createIPCard yang asal.
+ * Membuat Kad IP Awam Sahaja. WAN Interface diabaikan.
  */
 function createCombinedIPCard(iface, backend, ip, org) {
 	const shadowStyle = 'text-shadow: 1px 1px 2px #000000;';
 	
 	// Warna latar belakang separuh telus
 	const ipBgColor = 'rgba(128, 0, 128, 0.5)'; // Ungu (Purple) 50% opacity
-	const ifaceBgColor = 'rgba(96, 125, 139, 0.5)'; // Kelabu (Grey 50%) 50% opacity
 
 	const ipVal = E('span', { class: 'ip-value', id: 'ip-value', style: shadowStyle }, ipVisible ? ip : '**********');
 	const eyeIcon = E('img', {
@@ -249,31 +247,22 @@ function createCombinedIPCard(iface, backend, ip, org) {
 			: '/luci-static/resources/netstat/eye-off-outline.svg';
 	});
 
-	// Elemen WAN Interface (Bahagian Atas) - Background Kelabu 50%
-	const ifaceLabel = backend === 'vnstat' ? iface + ' (vnstat)' : iface;
-	const ifaceCard = E('div', {
-		class: 'iface-card',
-		style: `background-color: ${ifaceBgColor}; color: white; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center; margin: 0; box-shadow: none; border-bottom: 1px solid rgba(0, 0, 0, 0.2);`
-	}, [
-		E('div', { class: 'iface-label', style: `font-size: 10px; opacity: 0.8; ${shadowStyle}` }, _('WAN Interface')),
-		E('div', { class: 'iface-value', style: `font-size: 16px; font-weight: bold; ${shadowStyle}` }, ifaceLabel)
-	]);
-
 	// Elemen IP/ISP (Bahagian Bawah) - Background Ungu 50%
-	const ipCard = E('div', { 
-		class: 'ip-card', 
-		style: `background-color: ${ipBgColor}; color: white; padding: 8px 10px; border-radius: 0 0 4px 4px; text-align: center; box-shadow: none;`
+	// Menggunakan border-radius sepenuhnya untuk kad tunggal
+	const ipCard = E('div', {	
+		class: 'ip-card',	
+		style: `background-color: ${ipBgColor}; color: white; padding: 8px 10px; border-radius: 4px; text-align: center; box-shadow: none;`
 	}, [
 		E('div', { class: 'ip-line' }, [ipVal, eye]),
-		E('div', { class: 'ip-org', style: `color: white; ${shadowStyle}; font-size: 12px; opacity: 0.8;` }, org), 
+		E('div', { class: 'ip-org', style: `color: white; ${shadowStyle}; font-size: 12px; opacity: 0.8;` }, org),	
 	]);
 
-	// Kad Gabungan
+	// Kad Gabungan (Kini hanya mengandungi Kad IP sahaja)
 	return E('div', {
 		class: 'combined-card full-width',
 		style: 'margin-top: 15px; margin-bottom: 15px; border-radius: 4px; overflow: hidden; box-shadow: none;'
 	}, [
-		ifaceCard,
+		// ifaceCard (WAN Interface) TELAH DIBUANG
 		ipCard
 	]);
 }
@@ -446,8 +435,8 @@ return baseclass.extend({
 			// Baris 2: Total RX dan Total TX
 			grid.appendChild(createStatCard(rxLabel, rxTotal.number, rxTotal.unit, '#4CAF50', 0, 'total'));
 			grid.appendChild(createStatCard(txLabel, txTotal.number, txTotal.unit, '#2196F3', 0, 'total'));
-		
-			// Guna Kad Gabungan
+			
+			// Guna Kad Gabungan (Kini hanya IP Awam)
 			const combinedCardWrapper = E('div', { class: 'full-width' });
 			combinedCardWrapper.appendChild(createCombinedIPCard(
 				iface,
