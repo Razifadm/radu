@@ -18,12 +18,11 @@ https://raw.githubusercontent.com/Razifadm/radu/ipk/netspeedtest/speedtest-cli.i
 wget -O /tmp/luci-app-netspeedtest.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/netspeedtest/luci-app-netspeedtest.ipk >/dev/null 2>&1
 
-echo "Installing Net Speedtest"
-
 opkg install /tmp/*.ipk >/dev/null 2>&1
 
 echo "Done!!"
-echo "to Access Network-Netspeedtest"
+echo "to Access Netspeedtest"
+echo "Network-Netspeedtest"
 
 rm -f /tmp/*.ipk >/dev/null 2>&1
 rm -f "$0"
