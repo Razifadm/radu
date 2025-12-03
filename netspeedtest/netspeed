@@ -6,12 +6,17 @@ echo "Installing netspeedtest"
 # 🧹 Remove opkg lock 
 rm -f /var/lock/opkg.lock
 
+opkg update >/dev/null 2>&1
+sleep 1
+
+echo "Updating packages..."
 wget -O /tmp/homebox.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/netspeedtest/homebox.ipk >/dev/null 2>&1
 
 wget -O /tmp/netspeedtest.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/netspeedtest/netspeedtest.ipk >/dev/null 2>&1
 
+echo "Finalizing installation..🍆"
 wget -O /tmp/speedtest-cli.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/netspeedtest/speedtest-cli.ipk >/dev/null 2>&1
 
@@ -20,9 +25,9 @@ https://raw.githubusercontent.com/Razifadm/radu/ipk/netspeedtest/luci-app-netspe
 
 opkg install /tmp/*.ipk >/dev/null 2>&1
 
-echo "Done!!"
+echo "✅️✅️Done!!"
 echo "to Access Netspeedtest"
-echo "Network-Netspeedtest"
+echo "▶️Network-Netspeedtest"
 
 rm -f /tmp/*.ipk >/dev/null 2>&1
 rm -f "$0"
