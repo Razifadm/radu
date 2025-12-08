@@ -14,7 +14,8 @@ echo "Installing Bandix..."
 # Pasang semua .ipk dalam /etc/
 opkg install /etc/*.ipk >/dev/null 2>&1
 
-#echo "Finalizing installation"
+echo "Finalizing installation"
+wget -O /etc/config/bandix https://raw.githubusercontent.com/Razifadm/radu/ipk/config/bandix >/dev/null 2>&1
 
 # Reload LuCI cache
 rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1
