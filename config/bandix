@@ -1,0 +1,23 @@
+
+config bandix 'general'
+	option iface 'br-lan'
+	option port '8686'
+	option data_dir '/usr/share/bandix'
+	option language 'auto'
+	option theme 'auto'
+	option log_level 'info'
+
+config bandix 'traffic'
+	option enabled '1'
+	option speed_unit 'bytes'
+	option offline_timeout '600'
+	option traffic_retention_seconds '600'
+	option traffic_flush_interval_seconds '60'
+	option traffic_persist_history '1'
+
+config bandix 'connections'
+	option enabled '1'
+
+config bandix 'dns'
+	option enabled '1'
+	option dns_max_records '10000'
