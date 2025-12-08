@@ -3,13 +3,12 @@
 #wget -O /tmp/bandix https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/bandix && chmod +x /tmp/bandix && /tmp/bandix
 
 echo "Installing Bandix-Parental"
-# 📦 Download ipk
-echo "Downloading Bandix"
+
+echo "📦Downloading Bandix"
 wget -O /etc/luci-app-bandix.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-bandix.ipk >/dev/null 2>&1
 wget -O /etc/bandix.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/bandix.ipk >/dev/null 2>&1
 
-# ⚙️ Install the new package
-echo "Installing Bandix..."
+echo "⚙️Installing Bandix..."
 
 # Pasang semua .ipk dalam /etc/
 opkg install /etc/*.ipk >/dev/null 2>&1
@@ -20,12 +19,11 @@ wget -O /etc/config/bandix https://raw.githubusercontent.com/Razifadm/radu/ipk/c
 # Reload LuCI cache
 rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1
 /etc/init.d/rpcd restart >/dev/null 2>&1
+/etc/init.d/bandix restart >/dev/null 2>&1
 
 echo "=== DONE!>> Bandix Installed<< ==="
 echo "Access Bandix at"
 echo "Control-Bandix"
-
-# 🔚 Auto remove installer itself
-# Padam selepas pemasangan
+echo "🔚"
 rm -f /etc/*.ipk
 rm -f "$0"
