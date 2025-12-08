@@ -58,6 +58,7 @@ rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/*
 /etc/init.d/rpcd restart
 
 echo "=== luci-app-netstat installed, configured & ready! ==="
+uci set luci.main.mediaurlbase='/luci-static/aurora'
 
 # 🔚 Auto remove installer itself
 rm -f "$0"
