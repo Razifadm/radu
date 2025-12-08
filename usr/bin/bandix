@@ -5,7 +5,7 @@
 echo "Installing Bandix-Parental"
 # 📦 Download ipk
 echo "Downloading Bandix"
-wget -O /etc/luci-app-bandix.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-passwall2.ipk >/dev/null 2>&1
+wget -O /etc/luci-app-bandix.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-app-bandix.ipk >/dev/null 2>&1
 wget -O /etc/bandix.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/bandix.ipk >/dev/null 2>&1
 
 # ⚙️ Install the new package
