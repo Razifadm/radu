@@ -3,8 +3,8 @@
 echo "This process will install luci-theme-Alpha"
 
 
-# 📦 Download new luci-theme-Aurora
-echo "Downloading luci-theme-Aurora.ipk..."
+# 📦 Download new luci-theme-Alpha
+echo "Downloading luci-theme-Alpha.ipk..."
 wget -O /etc/luci-theme-alpha.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/luci-theme-alpha.ipk >/dev/null 2>&1
 
 #Install 
@@ -14,6 +14,7 @@ opkg install /etc/luci-theme-alpha.ipk
 #remove ipk
 echo "Cleaning temporary files"
 rm -f /etc/luci-theme-aurora.ipk >/dev/null 2>&1
+uci set luci.main.mediaurlbase='/luci-static/alpha'
 
 echo "Done!! Luci-Theme-Alpha Installed!!"
 
