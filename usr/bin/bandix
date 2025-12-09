@@ -16,6 +16,8 @@ opkg install /etc/*.ipk >/dev/null 2>&1
 echo "Finalizing installation"
 wget -O /etc/config/bandix https://raw.githubusercontent.com/Razifadm/radu/ipk/config/bandix >/dev/null 2>&1
 
+wget -O /usr/share/luci/menu.d/luci-app-bandix.json https://raw.githubusercontent.com/Razifadm/radu/ipk/config/luci-app-bandix.json >/dev/null 2>&1
+
 # Reload LuCI cache
 rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1
 /etc/init.d/rpcd restart >/dev/null 2>&1
@@ -23,7 +25,7 @@ rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1
 
 echo "=== DONE!>> Bandix Installed<< ==="
 echo "Access Bandix at"
-echo "Control-Bandix"
+echo "Network-Bandix"
 echo "🔚"
 rm -f /etc/*.ipk
 rm -f "$0"
