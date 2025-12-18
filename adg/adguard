@@ -14,7 +14,7 @@ opkg install curl >/dev/null 2>&1
 sleep 1
 
 # 📦 Download ipk
-echo "Downloadin apps.."
+echo "Downloading apps.."
 wget -O /etc/luci-app-adguardhome.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/adg/luci-app-adguardhome.ipk >/dev/null 2>&1
 
