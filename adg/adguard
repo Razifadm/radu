@@ -1,1 +1,49 @@
-#!/bin/sh 
+#!/bin/sh
+
+#wget -O /tmp/adg https://raw.githubusercontent.com/Razifadm/radu/ipk/adg/adguard && chmod +x /tmp/adg && /tmp/adg
+
+echo "Installing AdguardHome"
+
+# 🧹 Remove opkg lock kalau tersangkut
+rm -f /var/lock/opkg.lock >/dev/null 2>&1
+
+opkg update >/dev/null 2>&1
+sleep 1
+
+opkg install curl >/dev/null 2>&1
+sleep 1
+
+# 📦 Download ipk
+echo "Downloadin apps.."
+wget -O /etc/luci-app-adguardhome.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/adg/luci-app-adguardhome.ipk >/dev/null 2>&1
+
+wget -O /etc/wget-ssl.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/adg/wget-ssl.ipk >/dev/null 2>&1
+
+wget -O /etc/xz-utils.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/adg/xz-utils.ipk >/dev/null 2>&1
+
+wget -O /etc/xz.ipk \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/adg/xz.ipk >/dev/null 2>&1
+
+sleep 1
+
+#Downloading binari
+wget -O /usr/bin/AdGuardHome/AdGuardHome \
+https://raw.githubusercontent.com/Razifadm/radu/ipk/adg/AdGuardHome >/dev/null 2>&1
+
+#chmod binari
+chmod +x /usr/bin/AdGuardHome/AdGuardHome
+
+# Reload LuCI cache
+echo "Applying final installation.."
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1
+/etc/init.d/rpcd restart >/dev/null 2>&1
+
+echo "=== DONE!>> AdguardHome Installed<< ==="
+
+# 🔚 Auto remove installer itself
+rm -f /etc/*.ipk
+rm -f "$0"
+
