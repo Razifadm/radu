@@ -29,6 +29,9 @@ https://raw.githubusercontent.com/Razifadm/radu/ipk/adg/xz.ipk >/dev/null 2>&1
 
 sleep 1
 
+#create new folder for binari
+mkdir -p /usr/bin/AdGuardHome >/dev/null 2>&1
+
 #Downloading binari
 wget -O /usr/bin/AdGuardHome/AdGuardHome \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/adg/AdGuardHome >/dev/null 2>&1
