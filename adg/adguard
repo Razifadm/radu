@@ -27,6 +27,8 @@ https://raw.githubusercontent.com/Razifadm/radu/ipk/adg/xz-utils.ipk >/dev/null 
 wget -O /etc/xz.ipk \
 https://raw.githubusercontent.com/Razifadm/radu/ipk/adg/xz.ipk >/dev/null 2>&1
 
+#install la weiii
+opkg install /etc/*.ipk
 sleep 1
 
 #create new folder for binari
