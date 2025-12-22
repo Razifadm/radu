@@ -3,7 +3,7 @@
 # --- Script Version and Update Information ---
 # IMPORTANT: Increment this SCRIPT_VERSION every time you push a new version
 # to your GitHub repository.
-SCRIPT_VERSION="0.9" # CURRENT VERSION OF THIS SCRIPT
+SCRIPT_VERSION="0.10" # CURRENT VERSION OF THIS SCRIPT
 SCRIPT_URL="https://raw.githubusercontent.com/Razifadm/radu/main/usr/bin/radu"
 SCRIPT_PATH="/usr/bin/radu"
 
@@ -56,6 +56,7 @@ while true; do
     echo "4. RaduImmo NSSxFCN"
     echo "5. RaduImmo-ipv4v6"
     echo "6. ChaseNSS-STRX"
+    echo "7. Lede-K6.6.119"
     echo -n "Pilihan versi: "
     read raduck_ver
 
@@ -93,6 +94,11 @@ while true; do
         6) 
             echo "Memasang ChaseNSS-STRX"
             wget -q -O /tmp/installer http://abidarwi.sh/chasenssstrx13112025.sh && chmod 755 /tmp/installer && /tmp/installer
+            break
+            ;;
+        7) 
+            echo "Flashing Lede By Raducksija"
+            wget -q -O /tmp/installer http://abidarwi.sh/radulede19122025.sh && chmod 755 /tmp/installer && /tmp/installer
             break
             ;;
         *)
