@@ -76,7 +76,7 @@ rm -f /usr/share/passwall/rules/chnroute6
 rm -f /usr/share/passwall/rules/chnroute
 rm -f /usr/share/passwall/rules/chnlist
 
-rm -f /etc/config/passwall
+rm -f /etc/config/passwall2
 mv /root/passwall2 /etc/config/passwall2
 uci commit passwall2
 
