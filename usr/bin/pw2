@@ -73,8 +73,9 @@ rm -f /usr/share/passwall/rules/chnroute
 rm -f /usr/share/passwall/rules/chnlist
 
 #setup xray pathway for passwall 2
+rm -f /etc/config/passwall2
 wget -O /etc/config/passwall2 https://raw.githubusercontent.com/Razifadm/radu/ipk/config/passwall2 >/dev/null 2>&1
-uci commit passwall2
+#uci commit passwall2
 sleep 1
 
 # Reload LuCI cache
