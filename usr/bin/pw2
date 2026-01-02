@@ -34,6 +34,10 @@ wget -O /etc/libuci-lua.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/
 opkg update >/dev/null 2>&1
 opkg install curl >/dev/null 2>&1
 
+#setup xray pathway for passwall 2
+
+wget -O /root/passwall2 https://raw.githubusercontent.com/Razifadm/radu/ipk/config/passwall2 >/dev/null 2>&1
+
 # ⚙️ Install the new package
 echo "Installing apps..."
 
@@ -72,11 +76,9 @@ rm -f /usr/share/passwall/rules/chnroute6
 rm -f /usr/share/passwall/rules/chnroute
 rm -f /usr/share/passwall/rules/chnlist
 
-#setup xray pathway for passwall 2
-rm -f /etc/config/passwall2
-wget -O /etc/config/passwall2 https://raw.githubusercontent.com/Razifadm/radu/ipk/config/passwall2 >/dev/null 2>&1
-#uci commit passwall2
-sleep 1
+rm -f /etc/config/passwall
+mv /root/passwall2 /etc/config/passwall2
+uci commit passwall2
 
 # Reload LuCI cache
 echo "Applying final installation Passwall2.."
