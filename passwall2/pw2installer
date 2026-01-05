@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#wget -O /tmp/pw2 https://raw.githubusercontent.com/Razifadm/radu/passwall2/pw2installer && chmod +x /tmp/pw2 && /tmp/pw2
+#wget -O /tmp/pw2 https://raw.githubusercontent.com/Razifadm/radu/ipk/passwall2/pw2installer && chmod +x /tmp/pw2 && /tmp/pw2
 
 TMP_XRAY="/tmp/xraycorebaru"
 XRAY_BINARY="strxcore25122"
