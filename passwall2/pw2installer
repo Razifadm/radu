@@ -84,8 +84,13 @@ echo "✅ Xray Core stdstrx v25.12.2 installed successfully"
 
 echo "Latest Passwall2 Installed"
 
-#echo "* * * * * /bin/sh /usr/share/passwall2/vless_failover.sh" >> /etc/crontabs/root
-#/etc/init.d/cron restart
+wget -O /etc/config/autoswitch https://raw.githubusercontent.com/Razifadm/radu/ipk/passwall2/autoswitch >/dev/null 2>&1
+wget -O /usr/lib/lua/luci/model/cbi/passwall2/autoswitch.lua https://raw.githubusercontent.com/Razifadm/radu/ipk/passwall2/autoswitch.lua >/dev/null 2>&1
+wget -O /usr/share/passwall2/vless_failover.sh https://raw.githubusercontent.com/Razifadm/radu/ipk/passwall2/vless_failover.sh >/dev/null 2>&1
+wget -O /usr/lib/lua/luci/controller/passwall2_tools.lua https://raw.githubusercontent.com/Razifadm/radu/ipk/passwall2/passwall2_tools.lua >/dev/null 2>&1
+chmod 755 /usr/share/passwall2/vless_failover.sh >/dev/null 2>&1
+echo "* * * * * /bin/sh /usr/share/passwall2/vless_failover.sh" >> /etc/crontabs/root
+/etc/init.d/cron restart
 
 
 rm -f "$0"
