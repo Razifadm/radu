@@ -84,4 +84,8 @@ echo "✅ Xray Core stdstrx v25.12.2 installed successfully"
 
 echo "Latest Passwall2 Installed"
 
+#echo "* * * * * /bin/sh /usr/share/passwall2/vless_failover.sh" >> /etc/crontabs/root
+#/etc/init.d/cron restart
+
+
 rm -f "$0"
