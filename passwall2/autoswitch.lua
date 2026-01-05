@@ -3,7 +3,7 @@ local api = require "luci.passwall2.api"
 local i18n = require "luci.i18n"
 local fs = require "nixio.fs"
 
-m = Map("autoswitch", i18n.translate("Auto Switch"), i18n.translate("Auto Switch By Raducksijaa"))
+m = Map("autoswitch", i18n.translate("Auto Switch"), i18n.translate("By Raducksijaa"))
 
 s = m:section(TypedSection, "global", i18n.translate("Failover Setting"))
 s.anonymous = true
