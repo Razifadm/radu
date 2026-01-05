@@ -1,0 +1,6 @@
+
+config global
+	option enabled '1'
+	option fail_threshold '1'
+
+
