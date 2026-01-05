@@ -1,0 +1,87 @@
+#!/bin/sh
+
+#wget -O /tmp/pw2 https://raw.githubusercontent.com/Razifadm/radu/passwall2/pw2installer && chmod +x /tmp/pw2 && /tmp/pw2
+
+TMP_XRAY="/tmp/xraycorebaru"
+XRAY_BINARY="strxcore25122"
+
+echo "Installing Passwall2 feeds.."
+cat <<EOF >> /etc/opkg/customfeeds.conf
+src/gz passwall2 https://master.dl.sourceforge.net/project/openwrt-passwall-build/releases/packages-24.10/aarch64_cortex-a53/passwall2
+src/gz passwall_luci https://master.dl.sourceforge.net/project/openwrt-passwall-build/releases/packages-24.10/aarch64_cortex-a53/passwall_luci
+src/gz passwall_packages https://master.dl.sourceforge.net/project/openwrt-passwall-build/releases/packages-24.10/aarch64_cortex-a53/passwall_packages
+EOF
+
+# 🧹 Remove opkg lock kalau tersangkut
+rm -f /var/lock/opkg.lock
+
+#remove current passwall2 ipk dan remove current xray
+opkg remove luci-app-passwall2 >/dev/null 2>&1
+sleep 1
+
+# 🧹 Remove opkg lock kalau tersangkut
+rm -f /var/lock/opkg.lock
+
+echo "installing...1"
+wget -qO /tmp/passwall.pub https://master.dl.sourceforge.net/project/openwrt-passwall-build/passwall.pub >/dev/null 2>&1 
+opkg-key add /tmp/passwall.pub && rm -f /tmp/passwall.pub >/dev/null 2>&1 
+
+# 🧹 Remove opkg lock kalau tersangkut
+rm -f /var/lock/opkg.lock
+
+echo "installing...2"
+opkg update && opkg install --nodeps luci-app-passwall2 >/dev/null 2>&1 
+
+# 🧹 Remove opkg lock kalau tersangkut
+rm -f /var/lock/opkg.lock
+
+echo "updating xray core to latest version"
+wget -O "$TMP_XRAY" https://raw.githubusercontent.com/Razifadm/radu/ipk/"$XRAY_BINARY"  >/dev/null 2>&1 
+
+#remove current xray and replace with new one
+rm -rf /usr/bin/xray
+rm -rf /usr/bin/strxcore
+mv $TMP_XRAY /usr/bin/strxcore >/dev/null 2>&1 
+
+#chmod permission new xray, strxcore
+chmod +x /usr/bin/strxcore >/dev/null 2>&1 
+
+
+
+echo "[+] Mengatur port TCP redirect (1-65535)..."
+uci set passwall2.@global_app[0].xray_file='/usr/bin/strxcore' >/dev/null 2>&1 
+uci set passwall2.@global_forwarding[0].tcp_redir_ports='1:65535' >/dev/null 2>&1 
+uci commit passwall2 >/dev/null 2>&1 
+
+/etc/init.d/passwall2 restart >/dev/null 2>&1 
+
+
+echo "cleaning source feeds"
+sed -i '/passwall2/d' /etc/opkg/customfeeds.conf
+sed -i '/passwall_luci/d' /etc/opkg/customfeeds.conf
+sed -i '/passwall_packages/d' /etc/opkg/customfeeds.conf
+
+#delete rules passwall
+rm -f /usr/share/passwall2/rules/proxy_ip
+rm -f /usr/share/passwall2/rules/proxy_host
+rm -f /usr/share/passwall2/rules/domains_excluded
+rm -f /usr/share/passwall2/rules/direct_ip
+rm -f /usr/share/passwall2/rules/direct_host
+rm -f /usr/share/passwall2/rules/block_ip
+rm -f /usr/share/passwall2/rules/block_host
+rm -f /usr/share/passwall2/rules/gfwlist
+rm -f /usr/share/passwall2/rules/chnroute6
+rm -f /usr/share/passwall2/rules/chnroute
+rm -f /usr/share/passwall2/rules/chnlist
+
+# Reload LuCI cache
+echo "Applying final installation Passwall2.."
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1
+/etc/init.d/rpcd restart >/dev/null 2>&1
+
+strxcore --version
+echo "✅ Xray Core stdstrx v25.12.2 installed successfully"
+
+echo "Latest Passwall2 Installed"
+
+rm -f "$0"
