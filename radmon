@@ -1,0 +1,103 @@
+#!/bin/sh
+
+DB_DIR="/srv/mysql" 
+
+echo "==============================================="
+echo "   INSTALLER RADMONV2 - DB_CONFIG FIXED        "
+echo "==============================================="
+
+# 1. Smart Install Pakej (Skip jika sudah ada)
+PACKAGES="git git-http uhttpd php8 php8-cgi php8-mod-mysqli php8-mod-pdo-mysql \
+php8-mod-gd php8-mod-xml php8-mod-filter php8-mod-curl php8-mod-session \
+php8-mod-mbstring php8-mod-openssl mariadb-server mariadb-client"
+
+echo "Checking packages..."
+for pkg in $PACKAGES; do
+    if ! opkg list-installed | grep -q "^$pkg -"; then
+        opkg install $pkg
+    fi
+done
+
+# 2. Folder & Permission
+mkdir -p $DB_DIR /var/run/mysql /tmp/php-sessions
+chown -R mariadb:mariadb $DB_DIR /var/run/mysql
+chmod 777 /var/run/mysql /tmp/php-sessions
+
+# 3. MariaDB Init & Start
+if [ ! -d "$DB_DIR/mysql" ]; then
+    mariadb-install-db --user=mariadb --basedir=/usr --datadir=$DB_DIR
+fi
+
+uci set mysqld.general.enabled='1'
+uci set mysqld.general.datadir=$DB_DIR
+uci commit mysqld
+/etc/init.d/mysqld enable
+/etc/init.d/mysqld restart
+
+# 4. Tunggu MariaDB Ready
+echo -n "Waiting for MariaDB..."
+while ! mysqladmin ping -u root --silent; do
+    sleep 2
+    echo -n "."
+done
+echo " [OK]"
+
+# 5. Git Clone / Update
+cd /www/
+if [ ! -d "radmonv2" ]; then
+    git clone https://github.com/Maizil41/RadMonv2 radmonv2
+else
+    cd radmonv2 && git pull && cd ..
+fi
+chmod -R 755 /www/radmonv2
+
+# 6. KEMASKINI db_config.php (BAIKI PATH & FILE NAME)
+# Cari fail db_config.php dalam folder radmonv2
+CONF_PATH=$(find /www/radmonv2 -name "db_config.php" | head -n 1)
+
+if [ -n "$CONF_PATH" ]; then
+    echo "Config found at: $CONF_PATH"
+    # Menggunakan sed untuk ganti nilai dalam array PHP
+    sed -i "s/'servername' => '.*'/'servername' => '127.0.0.1'/g" "$CONF_PATH"
+    sed -i "s/'username' => '.*'/'username' => 'radmon'/g" "$CONF_PATH"
+    sed -i "s/'password' => '.*'/'password' => 'radmon'/g" "$CONF_PATH"
+    sed -i "s/'dbname' => '.*'/'dbname' => 'radmon'/g" "$CONF_PATH"
+else
+    echo "ERROR: db_config.php tidak dijumpai!"
+fi
+
+# 7. Import SQL
+echo "Importing database..."
+mysql -u root <<EOF
+CREATE DATABASE IF NOT EXISTS radmon;
+GRANT ALL PRIVILEGES ON radmon.* TO 'radmon'@'127.0.0.1' IDENTIFIED BY 'radmon';
+USE radmon;
+SOURCE /www/radmonv2/radmonv2.sql;
+FLUSH PRIVILEGES;
+EOF
+
+# 8. Web Server & PHP Session
+uci del_list uhttpd.main.interpreter=".php=/usr/bin/php-cgi" 2>/dev/null
+uci add_list uhttpd.main.interpreter=".php=/usr/bin/php8-cgi"
+uci add_list uhttpd.main.index_file="index.php"
+uci commit uhttpd
+/etc/init.d/uhttpd restart
+
+# Set session path dalam php.ini
+sed -i 's|;session.save_path = "/tmp"|session.save_path = "/tmp/php-sessions"|g' /etc/php.ini
+
+# 9. Startup Fix (rc.local)
+if ! grep -q "mkdir -p /var/run/mysql" /etc/rc.local; then
+    sed -i '/exit 0/i mkdir -p /var/run/mysql && chown mariadb:mariadb /var/run/mysql && /etc/init.d/mysqld restart' /etc/rc.local
+fi
+
+# 10. Info Akses
+LAN_IP=$(uci get network.lan.ipaddr | cut -d/ -f1)
+echo "==============================================="
+echo "   PEMASANGAN BERJAYA!                         "
+echo "==============================================="
+echo " URL Akses  : http://$LAN_IP/radmonv2/pages/login.php"
+echo " User Login : root"
+echo " Pass Login : mutiara"
+echo "==============================================="
+
