@@ -1,5 +1,5 @@
 #!/bin/sh
-#wget -O /tmp/qmodeminstall https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/qmodeminstall && chmod +x /tmp/qmodeminstall && /tmp/qmodeminstall >/dev/null 2>&1
+#wget -O /tmp/qmodeminstall https://raw.githubusercontent.com/Razifadm/radu/ipk/usr/bin/qmodeminstall && chmod +x /tmp/qmodeminstall && /tmp/qmodeminstall
 echo "Welcome to Qmodem installation"
 
 #Download Qmodem zip
