@@ -1,0 +1,116 @@
+#!/bin/sh
+
+# ─── Warna terminal ─────────────────────────
+YELLOW='\033[1;33m'
+GREEN='\033[1;32m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+# ─── URL server OTA ─────────────────────────
+SERVER="https://ota.pakawrt.me"
+FIRMWARE_LIST_URL="$SERVER/firmwares"
+FIRMWARE_BASE_URL="$SERVER/firmware"
+CHANGELOG_URL_BASE="$SERVER/changelog"
+
+DOWNLOAD_DIR="./firmwares"
+
+
+show_changelog() {
+    local firmware="$1"
+    local changelog_json_url="$CHANGELOG_URL_BASE/$firmware"
+
+    echo -e "\n🔍 Maklumat: $firmware"
+
+    changelog_json=$(curl -fs "$changelog_json_url" 2>/dev/null)
+
+    if echo "$changelog_json" | jq -e . >/dev/null 2>&1; then
+        echo "╔═════════════════════════════════╗"
+        echo "║       FIRMWARES CHANGELOGS      ║"
+        echo "╚═════════════════════════════════╝"
+        echo "$changelog_json" | jq -r '.log // "Tiada log."'
+    else
+        echo "📭 Tiada changelog ditemui."
+    fi
+}
+
+
+download_firmware() {
+    local selected_fw="$1"
+    local target_file="$DOWNLOAD_DIR/$selected_fw"
+
+    echo -e "\n⬇️ Downloading firmware..."
+    mkdir -p "$DOWNLOAD_DIR"
+
+    if curl --connect-timeout 30 --max-time 600 -f -L \
+        -o "${target_file}.part" \
+        "$FIRMWARE_BASE_URL/$selected_fw?username=raducksijaa&hwid=1776b395b78da8134a01663f71f5f316e0664fe8bec9380566b28575569a707a"
+    then
+        mv "${target_file}.part" "$target_file"
+        echo "✅ Download siap"
+    else
+        rm -f "${target_file}.part"
+        echo -e "${RED}❌ Download gagal${NC}"
+        exit 1
+    fi
+}
+
+
+if ! command -v jq >/dev/null 2>&1; then
+    opkg update && opkg install jq
+fi
+
+echo -e "${YELLOW}🚀 PakaWRT OTA${NC}"
+
+
+FIRMWARE_JSON=$(curl -s "$FIRMWARE_LIST_URL?username=raducksijaa&hwid=1776b395b78da8134a01663f71f5f316e0664fe8bec9380566b28575569a707a")
+STATUS=$(echo "$FIRMWARE_JSON" | jq -r '.status // "error"')
+
+if [ "$STATUS" != "ok" ]; then
+    MSG=$(echo "$FIRMWARE_JSON" | jq -r '.message // "Akses ditolak."')
+    echo -e "${RED}❌ Ralat Server: $MSG${NC}"
+    exit 1
+fi
+
+FIRMWARES=$(echo "$FIRMWARE_JSON" | jq -r '.firmwares[]')
+
+if [ -z "$FIRMWARES" ]; then
+    echo "📭 Tiada firmware tersedia."
+    exit 0
+fi
+
+
+echo -e "\n${GREEN}Pilih Firmware:${NC}"
+i=1
+echo "$FIRMWARES" | while read -r fw; do
+    echo "  $i) $fw"
+    i=$((i + 1))
+done
+
+TOTAL_FWS=$(echo "$FIRMWARES" | wc -l)
+echo -n -e "\n🔢 Masukkan nombor (1-${TOTAL_FWS}): "
+read -r CHOICE
+
+
+if ! echo "$CHOICE" | grep -qE '^[0-9]+$' ||
+   [ "$CHOICE" -lt 1 ] ||
+   [ "$CHOICE" -gt "$TOTAL_FWS" ]; then
+    echo -e "${RED}❌ Pilihan tidak sah${NC}"
+    exit 1
+fi
+
+
+SELECTED=$(echo "$FIRMWARES" | sed -n "${CHOICE}p")
+FIRMWARE_PATH="$DOWNLOAD_DIR/$SELECTED"
+
+show_changelog "$SELECTED"
+download_firmware "$SELECTED"
+
+echo "Flashing in progress"
+
+if sysupgrade -T "$FIRMWARE_PATH" >/dev/null 2>&1; then
+   echo -e "${GREEN}✅ Image check OK. Flashing...${NC}"
+    sysupgrade -n "$FIRMWARE_PATH"
+else
+   echo -e "${RED}❌ Wrong Device! Aborting.${NC}"
+   exit 1
+fi
