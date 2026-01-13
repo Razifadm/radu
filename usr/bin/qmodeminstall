@@ -25,7 +25,7 @@ unzip -o /tmp/qmodem.zip -d /tmp/qmodemipk
 echo "loading..."
 
 #install ipk
-opkg install /tmp/qmodem/*.ipk --force-depends
+opkg install /tmp/qmodemipk/*.ipk --force-depends
 
 echo "loading...."
 
