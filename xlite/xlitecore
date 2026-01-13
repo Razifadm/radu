@@ -2,12 +2,11 @@
 
 #wget -O /tmp/xlitecore https://raw.githubusercontent.com/Razifadm/radu/ipk/xlite/xlitecore && chmod +x /tmp/xlitecore && /tmp/xlitecore
 XRAY_BINARY="xlite"
-SCRIPT_PATH="/tmp/install.sh"
 TMP_XRAY="/tmp/xrayxlitevpnje"
 
 echo "Passwall 2 Xlite Core"
-echo "updating xray core to latest version"
-wget -O "$TMP_XRAY" https://raw.githubusercontent.com/Razifadm/radu/ipk/"$XRAY_BINARY"  >/dev/null 2>&1 
+echo "updating xray core to xlite @vpnje"
+wget -O "$TMP_XRAY" https://raw.githubusercontent.com/Razifadm/radu/ipk/xlite/"$XRAY_BINARY"  >/dev/null 2>&1 
 
 if [ ! -s "$TMP_XRAY" ]; then
     echo "❌ Download failed or empty file!"
@@ -17,7 +16,6 @@ if [ ! -s "$TMP_XRAY" ]; then
 fi
 
 #stop passwall services
-/etc/init.d/passwall stop >/dev/null 2>&1 
 /etc/init.d/passwall2 stop >/dev/null 2>&1 
 sleep 1 >/dev/null 2>&1 
 
@@ -29,9 +27,7 @@ mv $TMP_XRAY /usr/bin/xlite >/dev/null 2>&1
 chmod +x /usr/bin/xlite >/dev/null 2>&1 
 
 #setting xray path to xlite core
-#uci set passwall.@global_app[0].xray_file='/usr/bin/xlite'
 uci set passwall2.@global_app[0].xray_file='/usr/bin/xlite'
-#uci commit passwall
 uci commit passwall2
 
 echo "core updated to $XRAY_BINARY"
