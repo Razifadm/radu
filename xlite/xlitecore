@@ -23,7 +23,6 @@ sleep 1 >/dev/null 2>&1
 
 #remove current xray and replace with new one
 rm -rf /usr/bin/xray
-rm -rf /usr/bin/strxcore
 mv $TMP_XRAY /usr/bin/xlite >/dev/null 2>&1 
 
 #chmod permission new xray, strxcore
