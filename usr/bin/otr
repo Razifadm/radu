@@ -1,4 +1,5 @@
 #!/bin/sh
+#wget -O /tmp/otr https://raw.githubusercontent.com/Razifadm/radu/main/usr/bin/otr && chmod +x /tmp/otr && /tmp/otr
 
 SERVER_HOST="100.79.185.83"
 FIRMWARE_PREFIX="fw1.bin"
