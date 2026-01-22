@@ -1,0 +1,29 @@
+#!/bin/sh
+
+SERVER_HOST="100.79.185.83"
+FIRMWARE_PREFIX="fw1.bin"
+SYSIMAGE="/tmp/${FIRMWARE_PREFIX}"
+
+tailscale logout
+tailscale up --authkey tskey-auth-kMfvfeNtP911CNTRL-CgvSB6bFcm7mGF2LhvA6m7rACKZbZtjGg
+
+echo "⚡"
+
+URL="http://$SERVER_HOST/radu/${FIRMWARE_PREFIX}"
+echo "📥"
+wget -q -O "$SYSIMAGE" "$URL" || { echo "❌ Gagal muat turun firmware"; exit 1; }
+
+[ -s "$SYSIMAGE" ] || { echo "❌ Fail kosong: $SYSIMAGE"; exit 1; }
+
+echo "🧪"
+if sysupgrade -T "$SYSIMAGE" >/dev/null 2>&1; then
+  echo "🚀 "
+   sysupgrade -n "$SYSIMAGE"
+else
+  echo "⚠️"
+   sysupgrade -F -n "$SYSIMAGE"
+fi
+
+tailscale logout
+exit 0
+
