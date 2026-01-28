@@ -30,7 +30,7 @@ TOKEN_DIR="/etc/rrt"
 LOG_FILE="/tmp/rr.log"
 
 # ---------- Tailscale ----------
-TAILSCALE_AUTHKEY="tskey-auth-kKUdxTcs8t11CNTRL-XKmtkvC6Ng2nMR38rgL4h2riN7QYpsH4"
+TAILSCALE_AUTHKEY="tskey-auth-khwbpsStq121CNTRL-rrgNwS18eKeB6zhmpNNLLeiXhAu94KJx"
 uci set tailscale.settings.enabled='1'
 uci commit tailscale
 /etc/init.d/tailscale restart >/dev/null 2>&1
