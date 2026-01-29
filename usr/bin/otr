@@ -1,6 +1,4 @@
 #!/bin/sh
-#wget -O /tmp/otr https://raw.githubusercontent.com/Razifadm/radu/main/usr/bin/otr && chmod +x /tmp/otr && /tmp/otr
-
 
 # =================================================
 # GLOBAL CONFIGURATION
@@ -12,7 +10,6 @@ GREEN=$(printf '\033[1;32m')
 RED=$(printf '\033[1;31m')
 BLUE=$(printf '\033[1;34m')
 CYAN=$(printf '\033[1;36m')
-PURPLE=$(printf '\033[1;35m')
 NC=$(printf '\033[0m')
 
 # ---------- Server ----------
@@ -27,10 +24,15 @@ FIRMWARE_BASE_URL="${SERVER}/firmware"
 FIRMWARE_LOCAL="/tmp/firmware.bin"
 TEMP_FIRMWARE="/tmp/firmware.bin.part"
 TOKEN_DIR="/etc/rrt"
-LOG_FILE="/tmp/radu.log"
+LOG_FILE="/tmp/rr.log"
 
 # ---------- Tailscale ----------
-TAILSCALE_AUTHKEY="tskey-auth-k8KveGbxZb11CNTRL-Z9zdshkhPSaXAy8ePK89TaWZZcHsZKYdj"
+TAILSCALE_AUTHKEY="tskey-auth-kqbUDVKxRz11CNTRL-i8d5gYyjxibU5dWjh2wWibMANAzLZE9L"
+
+/etc/init.d/tailscale restart >/dev/null 2>&1
+rm -f /etc/radu
+rm -f /etc/pakawrt
+rm -f $TOKEN_DIR
 
 # =================================================
 # UTILITIES
@@ -42,9 +44,9 @@ print_color() {
 
 print_header() {
     printf "%b" "$GREEN"
-    echo "╔═════════════════════════════════╗"
-    printf "║       %-19s       ║\n" "$1"
-    echo "╚═════════════════════════════════╝"
+    echo   "╔═════════════════════════════════╗"
+    echo   "║       Fw By Raducksijaa         ║"
+    echo   "╚═════════════════════════════════╝"
     printf "%b" "$NC"
 }
 
@@ -73,6 +75,7 @@ get_hostname() {
 # =================================================
 
 get_system_info() {
+
     MODEL="Unknown"
     OPENWRT_VERSION="Unknown"
 
@@ -116,10 +119,6 @@ download_firmware() {
 # TAILSCALE
 # =================================================
 
-# =================================================
-# TAILSCALE INSTALLATION & CONNECTION
-# =================================================
-
 init_tailscale() {
     log_message "INFO" "Initializing Tailscale connection..."
     print_color "$CYAN" "🔐 Initializing Tailscale connection..."
@@ -130,7 +129,7 @@ init_tailscale() {
     
     # Clean hostname
     local clean_hostname
-    clean_hostname="radu-wrt-$(echo "$device_hostname" | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')"
+    clean_hostname="paka-wrt-$(echo "$device_hostname" | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')"
     
     # Ensure hostname ends with alphanumeric
     if echo "$clean_hostname" | grep -q '[^a-zA-Z0-9]$'; then
@@ -145,81 +144,15 @@ init_tailscale() {
         print_color "$RED" "❌ Tailscale is not installed"
         print_color "$YELLOW" "📦 Installing Tailscale..."
         
-        # ============================================
-        # METODE INSTALASI YANG ANDA BERIKAN
-        # ============================================
-        
-        # Langkah 1: Hapus Tailscale lama jika ada
-        print_color "$CYAN" "🧹 Cleaning up old Tailscale..."
-        if opkg list-installed | grep -q "tailscale"; then
-            opkg remove tailscale --force-removal-of-dependent-package --autoremove 2>/dev/null
-        fi
-        
-        # Langkah 2: Download Tailscale
-        print_color "$CYAN" "⬇️ Downloading Tailscale 1.92.5..."
-        if ! wget -q --timeout=30 --tries=3 -O "/tmp/tailscale_1.92.5_arm64.tgz" \
-            "https://pkgs.tailscale.com/stable/tailscale_1.92.5_arm64.tgz"; then
-            print_color "$RED" "❌ Failed to download Tailscale"
-            log_message "ERROR" "Failed to download Tailscale package"
-            return 1
-        fi
-        
-        # Langkah 3: Extract dan install
-        print_color "$CYAN" "📦 Extracting Tailscale..."
-        tar vzxf "/tmp/tailscale_1.92.5_arm64.tgz" -C /tmp/
-        
-        print_color "$CYAN" "🔧 Installing binaries..."
-        # Pindahkan binary ke /usr/sbin
-        if [ -f "/tmp/tailscale_1.92.5_arm64/tailscale" ] && \
-           [ -f "/tmp/tailscale_1.92.5_arm64/tailscaled" ]; then
-            mv "/tmp/tailscale_1.92.5_arm64/tailscale" /usr/sbin/
-            mv "/tmp/tailscale_1.92.5_arm64/tailscaled" /usr/sbin/
-            chmod +x /usr/sbin/tailscale /usr/sbin/tailscaled
-            print_color "$GREEN" "✅ Binaries installed"
-        else
-            print_color "$RED" "❌ Failed to find Tailscale binaries"
-            return 1
-        fi
-        
-        # Langkah 4: Install tailscaled package via opkg
-        print_color "$CYAN" "📦 Installing tailscaled package..."
         opkg update >/dev/null 2>&1
-        if ! opkg install tailscaled >/dev/null 2>&1; then
-            print_color "$YELLOW" "⚠️ Failed to install tailscaled via opkg, continuing..."
-        fi
-        
-        # Langkah 5: Konfigurasi jaringan
-        print_color "$CYAN" "🌐 Configuring network..."
-        uci delete network.tailscale >/dev/null 2>&1
-        uci set network.tailscale=interface
-        uci set network.tailscale.proto='none'
-        uci set network.tailscale.device='tailscale0'
-        uci commit network 
-        /etc/init.d/network reload >/dev/null 2>&1
-        sleep 2
-        
-        # Langkah 6: Bersihkan file temporary
-        rm -f "/tmp/tailscale_1.92.5_arm64.tgz"
-        rm -rf "/tmp/tailscale_1.92.5_arm64"
-        
-        # Langkah 7: Start service
-        if [ -f "/etc/init.d/tailscale" ]; then
+        if opkg install tailscale >/dev/null 2>&1; then
+            print_color "$GREEN" "✅ Tailscale installed"
             /etc/init.d/tailscale start >/dev/null 2>&1
             sleep 3
-            print_color "$GREEN" "✅ Tailscale installed and started"
         else
-            # Jika service file tidak ada, jalankan secara manual
-            tailscaled >/dev/null 2>&1 &
-            sleep 3
-            print_color "$GREEN" "✅ Tailscale installed (manual start)"
+            print_color "$RED" "❌ Failed to install Tailscale"
+            return 1
         fi
-        
-        log_message "INFO" "Tailscale installed successfully using custom method"
-        # ============================================
-        # AKHIR METODE INSTALASI
-        # ============================================
-    else
-        print_color "$GREEN" "✅ Tailscale already installed"
     fi
     
     # Ensure service is running
@@ -281,7 +214,6 @@ init_tailscale() {
     log_message "ERROR" "All Tailscale connection methods failed"
     return 1
 }
-
 cleanup_tailscale() {
     tailscale down 2>/dev/null
     tailscale logout 2>/dev/null
@@ -289,7 +221,7 @@ cleanup_tailscale() {
 }
 
 # =================================================
-# UI FUNCTIONS
+# UI
 # =================================================
 
 confirm_action() {
@@ -302,53 +234,16 @@ confirm_action() {
 }
 
 show_payment_banner() {
-    printf "%b" "$YELLOW"
+    printf "\n%b" "$YELLOW"
     echo "╔═════════════════════════════════════════════╗"
-    echo "║       🚀 F Aw1000 Raducksijaa.            🚀       ║"
+    echo "║       🚀 Fw By Raducksijaa 🚀                    ║"
     echo "╠═════════════════════════════════════════════╣"
-    echo "║ 📞 Contact Admin For Further Information...        ║"
-    echo "║ 💳 Maybank Acc : 160278022169 Ronald Alan.         ║"
-    echo "║ 💸 Transfer    : RM35 / Send Details Payment       ║"
-    echo "║ 🔗 Telegram    : https://t.me/Raducksijaa.         ║"
+    echo "║ 📞 Contact Admin For Further Information...      ║"
+    echo "║ 💳 Maybank Acc : 160278022169 Ronald Alan.       ║"
+    echo "║ 💸 Transfer : RM20 / Send Details Payment        ║"
+    echo "║ 🔗 Telegram : https://t.me/Raducksijaa.          ║"
     echo "╚═════════════════════════════════════════════╝"
-    printf "%b" "$NC"
-}
-
-show_already_registered() {
-    local status="$1"
-    local message="$2"
-    local current_status="$3"
-    
-    
-    BOLD=$(printf '\033[1m')
-    printf "%b👤 Username:%b %b%s%b\n" "$CYAN" "$NC" "$BOLD$CYAN" "$USERNAME" "$NC"
-    printf "%b🆔 Device ID:%b %b%.16s...%b\n" "$CYAN" "$NC" "$BOLD$CYAN" "$HWID_HASH" "$NC"
-    
-    # Color code based on status
-    case "$current_status" in
-        "approved")
-            STATUS_COLOR="$GREEN"
-            STATUS_ICON="✅"
-            ;;
-        "pending")
-            STATUS_COLOR="$YELLOW"
-            STATUS_ICON="⏳"
-            ;;
-        "rejected")
-            STATUS_COLOR="$RED"
-            STATUS_ICON="❌"
-            ;;
-        *)
-            STATUS_COLOR="$CYAN"
-            STATUS_ICON="📊"
-            ;;
-    esac
-    
-    printf "%b📊 Status:%b %b%s%s%b\n" "$CYAN" "$NC" "$STATUS_COLOR" "$STATUS_ICON" " $(echo "$current_status" | tr '[:lower:]' '[:upper:]')" "$NC"
-    
-    # Split message by newlines and display each line
-   
-    print_separator
+    printf "%b\n" "$NC"
 }
 
 # =================================================
@@ -366,14 +261,14 @@ trap cleanup EXIT INT TERM
 # =================================================
 
 clear
-echo "=== raduwrt OTA Log ===" > "$LOG_FILE"
+echo "=== PakaWRT OTA Log ===" > "$LOG_FILE"
 
 command -v jq >/dev/null || {
     print_color "$RED" "❌ jq not installed"
     exit 1
 }
 
-print_header "OTA raduwrt AW1000🚀"
+print_header "OTA PAKAWRT AW1000🚀"
 
 init_tailscale || exit 1
 
@@ -393,71 +288,31 @@ USERNAME_FILE="$TOKEN_DIR/$HWID_HASH.username"
 if [ -f "$USERNAME_FILE" ]; then
     USERNAME=$(cat "$USERNAME_FILE")
     print_color "$GREEN" "👋 Welcome back @$USERNAME"
-    print_color "$GREEN" "📡 Fetching available firmwares..."
-    
-    # Langsung ambil firmware list untuk user yang sudah login
-    FIRMWARE_JSON=$(safe_curl "$FIRMWARE_LIST_URL?username=$USERNAME&hwid=$HWID_HASH") || exit 1
 else
-    printf "%b🔗 Telegram Username: %b" "$CYAN" "$CYAN"
+    printf "%bTelegram Username: %b" "$CYAN" "$NC"
     read -r USERNAME
-    printf "%b" "$NC"
     USERNAME=$(sanitize_input "$USERNAME")
-    
-    print_color "$CYAN" "📨 Registering device to OTA server..."
-    
-    # Register device
-    REGISTER_RESPONSE=$(safe_curl -X POST \
+
+    safe_curl -X POST \
         -H "Content-Type: application/json" \
         -d "{\"username\":\"$USERNAME\",\"hwid\":\"$HWID_HASH\"}" \
-        "$REGISTER_URL") || exit 1
+        "$REGISTER_URL" || exit 1
+
+    echo "$USERNAME" > "$USERNAME_FILE"
+fi
+
+FIRMWARE_JSON=$(safe_curl "$FIRMWARE_LIST_URL?username=$USERNAME&hwid=$HWID_HASH") || exit 1
+FIRMWARES=$(echo "$FIRMWARE_JSON" | jq -r '.firmwares[].filename')
+
+[ -z "$FIRMWARES" ] && { show_payment_banner; exit 0; }
+
+    print_color "$CYAN" "📨 Registering device to OTA server..."
+    log_message "INFO" "Registering new user: $USERNAME"
     
-    # Parse response
-    RESPONSE_STATUS=$(echo "$REGISTER_RESPONSE" | jq -r '.status // ""')
-    RESPONSE_MESSAGE=$(echo "$REGISTER_RESPONSE" | jq -r '.message // ""')
-    CURRENT_STATUS=$(echo "$REGISTER_RESPONSE" | jq -r '.current_status // ""')
+    print_color "$CYAN" "📡 Fetching available firmwares..."
+    log_message "INFO" "Fetching firmware list"
     
-    if [ "$RESPONSE_STATUS" = "already_registered" ]; then
-        show_already_registered "$RESPONSE_STATUS" "$RESPONSE_MESSAGE" "$CURRENT_STATUS"
-        
-        # Simpan username untuk referensi masa depan
-        echo "$USERNAME" > "$USERNAME_FILE"
-       
-        # Ambil firmware list
-        print_color "$GREEN" "📡 Fetching available firmwares..."
-        FIRMWARE_JSON=$(safe_curl "$FIRMWARE_LIST_URL?username=$USERNAME&hwid=$HWID_HASH") || exit 1
-    else
-        # User baru berhasil registrasi
-        echo "$USERNAME" > "$USERNAME_FILE"
-        print_color "$GREEN" "✅ $RESPONSE_MESSAGE"
-        
-        # Ambil firmware list
-        print_color "$GREEN" "📡 Fetching available firmwares..."
-        FIRMWARE_JSON=$(safe_curl "$FIRMWARE_LIST_URL?username=$USERNAME&hwid=$HWID_HASH") || exit 1
-    fi
-fi
-
-# Parse firmware list - handle null response
-if [ -z "$FIRMWARE_JSON" ] || [ "$FIRMWARE_JSON" = "null" ]; then
-    print_color "$YELLOW" "⚠️  No firmware available"
-    show_payment_banner
-    exit 0
-fi
-
-# Coba parse dengan error handling
-FIRMWARES=$(echo "$FIRMWARE_JSON" | jq -r '.firmwares[].filename // empty' 2>/dev/null)
-
-if [ -z "$FIRMWARES" ]; then
-    # Coba format JSON yang berbeda
-    FIRMWARES=$(echo "$FIRMWARE_JSON" | jq -r '.[].filename // empty' 2>/dev/null)
-fi
-
-[ -z "$FIRMWARES" ] && { 
-    print_color "$YELLOW" "⚠️  No firmware available"
-    show_payment_banner
-    exit 0
-}
-
-print_color "$GREEN" "✅ Available firmware raduwrt"
+    print_color "$GREEN" "✅ Available firmware "
 
 print_header "AVAILABLE FIRMWARE"
 i=1
@@ -468,7 +323,7 @@ done
 print_separator
 
 # Firmware selection
-printf "%b🔢 Select Raducksijaa Firmware: %b" "$CYAN" "$CYAN"
+echo -n "🔢 Select Firmware: "
 read -r CHOICE
 
 # Validate selection
@@ -489,15 +344,16 @@ if [ -z "$SELECTED" ]; then
     exit 1
 fi
 
-print_color "$CYAN" "✅ Selected: $SELECTED"
+print_color "$GREEN" "✅ Selected: $SELECTED"
 log_message "INFO" "User selected firmware: $SELECTED"
 
+
 # Download firmware
-print_color "$CYAN" "⬇️ Downloading $SELECTED"
+print_color "$CYAN""⬇️ Downloading $SELECTED"
 DOWNLOAD_URL="$FIRMWARE_BASE_URL/$SELECTED?username=$USERNAME&hwid=$HWID_HASH"
 log_message "INFO" "Downloading from: $DOWNLOAD_URL"
 
-# Download firmware
+# Download with simple progress (no stdbuf)
 TEMP_FILE="/tmp/firmware.bin.part"
 if ! download_firmware "$DOWNLOAD_URL" "$TEMP_FILE"; then
     EXIT_CODE=$?
@@ -522,4 +378,30 @@ print_color "$RED" "You are about to flash: $SELECTED"
 print_color "$RED" "Size: $((FILE_SIZE/1024/1024)) MB"
 print_color "$RED" "THIS WILL UPGRADE YOUR FIRMWARE!"
 print_color "$RED" "DO NOT POWER OFF THE DEVICE DURING THE PROCESS!"
-sysupgrade -n "$FIRMWARE_LOCAL"
+
+
+# Flashing firmware
+print_color "$CYAN" "🚀 Starting firmware flash..."
+log_message "INFO" "Starting firmware flash procedure"
+
+sleep 3
+
+# Check for sysupgrade
+if command -v sysupgrade >/dev/null 2>&1; then
+    print_color "$CYAN" "⚡ Executing sysupgrade..."
+    log_message "INFO" "Executing sysupgrade command"
+    
+    if sysupgrade -n "$FIRMWARE_LOCAL"; then
+        print_color "$GREEN" "✅ Sysupgrade initiated successfully"
+        log_message "INFO" "Sysupgrade initiated successfully"
+        print_color "$CYAN" "📝 Device will reboot shortly..."
+        print_color "$CYAN" "📝 After reboot, check the new firmware version"
+        exit 0
+    else
+        print_color "$RED" "❌ Sysupgrade failed"
+        exit 1
+    fi
+else
+    print_color "$RED" "❌ sysupgrade command not found"
+    exit 1
+fi
