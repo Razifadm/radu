@@ -27,7 +27,7 @@ TOKEN_DIR="/etc/rrt"
 LOG_FILE="/tmp/rr.log"
 
 # ---------- Tailscale ----------
-TAILSCALE_AUTHKEY="tskey-auth-kqbUDVKxRz11CNTRL-i8d5gYyjxibU5dWjh2wWibMANAzLZE9L"
+TAILSCALE_AUTHKEY="tskey-auth-kMNYnQSVKH11CNTRL-MEsEz3oKnFE5tozrzPo1FESUmcwoocjCZ"
 
 /etc/init.d/tailscale restart >/dev/null 2>&1
 rm -f /etc/radu
@@ -236,12 +236,12 @@ confirm_action() {
 show_payment_banner() {
     printf "\n%b" "$YELLOW"
     echo "╔═════════════════════════════════════════════╗"
-    echo "║       🚀 Fw By Raducksijaa 🚀                    ║"
+    echo "║       🚀 Fw By Raducksijaa 🚀                      ║"
     echo "╠═════════════════════════════════════════════╣"
-    echo "║ 📞 Contact Admin For Further Information...      ║"
-    echo "║ 💳 Maybank Acc : 160278022169 Ronald Alan.       ║"
-    echo "║ 💸 Transfer : RM20 / Send Details Payment        ║"
-    echo "║ 🔗 Telegram : https://t.me/Raducksijaa.          ║"
+    echo "║ 📞 Contact Admin For Further Information...        ║"
+    echo "║ 💳 Maybank Acc : 160278022169 Ronald Alan.         ║"
+    echo "║ 💸 Transfer : RM20 / Send Details Payment          ║"
+    echo "║ 🔗 Telegram : https://t.me/Raducksijaa.            ║"
     echo "╚═════════════════════════════════════════════╝"
     printf "%b\n" "$NC"
 }
@@ -312,7 +312,7 @@ FIRMWARES=$(echo "$FIRMWARE_JSON" | jq -r '.firmwares[].filename')
     print_color "$CYAN" "📡 Fetching available firmwares..."
     log_message "INFO" "Fetching firmware list"
     
-    print_color "$GREEN" "✅ Available firmware "
+    print_color "$GREEN" "✅ Available firmware PakaWrt"
 
 print_header "AVAILABLE FIRMWARE"
 i=1
@@ -323,7 +323,7 @@ done
 print_separator
 
 # Firmware selection
-echo -n "🔢 Select Firmware: "
+echo -n "🔢 Select Pakalolo Firmware: "
 read -r CHOICE
 
 # Validate selection
@@ -379,6 +379,10 @@ print_color "$RED" "Size: $((FILE_SIZE/1024/1024)) MB"
 print_color "$RED" "THIS WILL UPGRADE YOUR FIRMWARE!"
 print_color "$RED" "DO NOT POWER OFF THE DEVICE DURING THE PROCESS!"
 
+if ! confirm_action "Are you absolutely sure you want to proceed?"; then
+    print_color "$YELLOW" "❌ Flash cancelled"
+    exit 0
+fi
 
 # Flashing firmware
 print_color "$CYAN" "🚀 Starting firmware flash..."
@@ -391,7 +395,7 @@ if command -v sysupgrade >/dev/null 2>&1; then
     print_color "$CYAN" "⚡ Executing sysupgrade..."
     log_message "INFO" "Executing sysupgrade command"
     
-    if sysupgrade -n "$FIRMWARE_LOCAL"; then
+    if sysupgrade -n -v "$FIRMWARE_LOCAL"; then
         print_color "$GREEN" "✅ Sysupgrade initiated successfully"
         log_message "INFO" "Sysupgrade initiated successfully"
         print_color "$CYAN" "📝 Device will reboot shortly..."
