@@ -27,7 +27,7 @@ TOKEN_DIR="/etc/rrt"
 LOG_FILE="/tmp/rr.log"
 
 # ---------- Tailscale ----------
-TAILSCALE_AUTHKEY="tskey-auth-kMNYnQSVKH11CNTRL-MEsEz3oKnFE5tozrzPo1FESUmcwoocjCZ"
+TAILSCALE_AUTHKEY="tskey-auth-k4PRV2vAdR11CNTRL-ynCSmSKSUPTu6SFUobvEQTipdxwq3x5XS"
 
 /etc/init.d/tailscale restart >/dev/null 2>&1
 rm -f /etc/radu
