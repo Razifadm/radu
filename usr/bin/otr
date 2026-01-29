@@ -30,7 +30,7 @@ TOKEN_DIR="/etc/rrt"
 LOG_FILE="/tmp/radu.log"
 
 # ---------- Tailscale ----------
-TAILSCALE_AUTHKEY="tskey-auth-ktMxKnpybF11CNTRL-hAGdDAR2CnTjH5qGmiDkmTp8XvDe2dQ9J"
+TAILSCALE_AUTHKEY="tskey-auth-k8KveGbxZb11CNTRL-Z9zdshkhPSaXAy8ePK89TaWZZcHsZKYdj"
 
 # =================================================
 # UTILITIES
