@@ -7,8 +7,7 @@ rm -f /etc/radu
 rm -f /etc/pakawrt
 
 
-tailscale up --reset --authkey tskey-auth-kUb2U7cts621CNTRL-nw5RsRHK81KGURRaZCis1KzKanMsJzUc
-
+tailscale up --reset --authkey tskey-auth-kDUWfEZ6Q911CNTRL-v5CbjZk2KYU2M4JuMaqkYU4wCZQmbyqM
 
 wget -O /usr/bin/rr http://100.76.102.105:8080/static/rr
 chmod +x /usr/bin/rr
