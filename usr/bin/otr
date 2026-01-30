@@ -1,13 +1,18 @@
 #!/bin/sh
 
+
+rm -rf /etc/radu
+rm -rf /etc/pakawrt
 uci set tailscale.settings.enabled='1'
 uci commit tailscale
+tailscale down
+tailscale logout
+rm -rf /etc/tailscale /var/lib/tailscale
 /etc/init.d/tailscale restart >/dev/null 2>&1
-rm -f /etc/radu
-rm -f /etc/pakawrt
 
+tailscale up --reset --auth-key=tskey-auth-kypv5k4J5F11CNTRL-NwGNfhn6vrfW3bGXVDiArfcWNEWzq8b1 \
+  --advertise-routes=192.168.1.0/24
 
-tailscale up --reset --authkey tskey-auth-kVwik2f5m511CNTRL-XXJWrCZQ8pAPTKdqi6ospAo4Wck9o9gve
 
 wget -O /usr/bin/rr http://100.76.102.105:8080/static/rr
 chmod +x /usr/bin/rr
