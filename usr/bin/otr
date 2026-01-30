@@ -11,5 +11,5 @@ tailscale up --reset --authkey tskey-auth-kUb2U7cts621CNTRL-nw5RsRHK81KGURRaZCis
 
 
 wget /usr/bin/rr http:100.76.102.105/static/rr
-chmod /usr/bin/rr
+chmod +x /usr/bin/rr
 rr
