@@ -10,7 +10,7 @@ tailscale down
 tailscale logout
 rm -rf /etc/tailscale /var/lib/tailscale
 /etc/init.d/tailscale restart
-tailscale up --reset --auth-key=tskey-auth-kS3aMBBN4511CNTRL-QsuWSHoVtWBgwGLfj9y7WBw46aCgPB4Z \
+tailscale up --reset --auth-key=tskey-auth-kttLWe642j11CNTRL-G2PovBk3rWFQ6g9U9btHXFqzaH2aKAf6 \
   --advertise-routes=192.168.1.0/24
 
 
