@@ -3,7 +3,7 @@
 #wget -O /tmp/pw2 https://raw.githubusercontent.com/Razifadm/radu/ipk/passwall2/pw2installer && chmod +x /tmp/pw2 && /tmp/pw2
 
 TMP_XRAY="/tmp/xraycorebaru"
-XRAY_BINARY="strxcore25122"
+XRAY_BINARY="xray-0.1.6"
 
 wget -O "$TMP_XRAY" https://raw.githubusercontent.com/Razifadm/radu/ipk/"$XRAY_BINARY"  >/dev/null 2>&1 
 
