@@ -6,18 +6,23 @@ echo "📦 This will install sms tool for aw1000"
 wget -O /tmp/luci-app-sms-tool-js.ipk
 https://raw.githubusercontent.com/Razifadm/radu/ipk/sms/luci-app-sms-tool-js.ipk >/dev/null 2>&1
 
+wget -O /tmp/openssh-sftp-server_9.8p1-1_x86_64.ipk
+https://raw.githubusercontent.com/Razifadm/radu/ipk/sms/openssh-sftp-server_9.8p1-1_x86_64.ipk >/dev/null 2>&1
+
 wget -O /usr/bin/sms_tool
 https://raw.githubusercontent.com/Razifadm/radu/ipk/sms/sms_tool >/dev/null 2>&1
 
-# Pasang theme
+# install all ipk
 echo "Installing sms tool"
 opkg install /tmp/luci-app-sms-tool-js.ipk >/dev/null 2>&1
+opkg install /tmp/openssh-sftp-server_9.8p1-1_x86_64.ipk >/dev/null 2>&1
 sleep 1
 
 chmod 755 /usr/bin/sms_tool >/dev/null 2>&1
 
 # Buang fail sementara
 rm -f /tmp/luci-app-sms-tool-js.ipk
+rm -f /tmp/openssh-sftp-server_9.8p1-1_x86_64.ipk
 
 #wget etc/config/sms
 rm -f /etc/config/sms_tool_js
