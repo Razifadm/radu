@@ -1,0 +1,34 @@
+#!/bin/sh
+
+echo "📦 This will install sms tool for aw1000"
+
+# Download ipk
+wget -O /tmp/luci-app-sms-tool-js.ipk
+https://raw.githubusercontent.com/Razifadm/radu/ipk/sms/luci-app-sms-tool-js.ipk >/dev/null 2>&1
+
+wget -O /usr/bin/sms_tool
+https://raw.githubusercontent.com/Razifadm/radu/ipk/sms/sms_tool >/dev/null 2>&1
+
+# Pasang theme
+echo "Installing sms tool"
+opkg install /tmp/luci-app-sms-tool-js.ipk >/dev/null 2>&1
+sleep 1
+
+chmod 755 /usr/bin/sms_tool >/dev/null 2>&1
+
+# Buang fail sementara
+rm -f /tmp/luci-app-sms-tool-js.ipk
+
+#wget etc/config/sms
+
+
+# Restart web UI
+/etc/init.d/uhttpd restart
+echo ""
+echo "Access Luci-App-sms-tool"
+echo ""
+echo "Modem-Sms Messages"
+echo ""
+
+# Hapus skrip selepas jalan
+rm -f "$0" >/dev/null 2>&1
