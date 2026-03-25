@@ -20,7 +20,10 @@ chmod 755 /usr/bin/sms_tool >/dev/null 2>&1
 rm -f /tmp/luci-app-sms-tool-js.ipk
 
 #wget etc/config/sms
-
+rm -f /etc/config/sms_tool_js
+wget -O /etc/config/sms_tool_js
+https://raw.githubusercontent.com/Razifadm/radu/ipk/sms/sms_tool_js >/dev/null 2>&1
+uci commit sms_tool_js
 
 # Restart web UI
 /etc/init.d/uhttpd restart
