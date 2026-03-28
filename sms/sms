@@ -3,14 +3,11 @@
 echo "📦 This will install sms tool for aw1000"
 
 # Download ipk
-wget -O /tmp/luci-app-sms-tool-js.ipk
-https://raw.githubusercontent.com/Razifadm/radu/ipk/sms/luci-app-sms-tool-js.ipk >/dev/null 2>&1
+wget -O /tmp/luci-app-sms-tool-js.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/sms/luci-app-sms-tool-js.ipk >/dev/null 2>&1
 
-wget -O /tmp/openssh-sftp-server_9.8p1-1_x86_64.ipk
-https://raw.githubusercontent.com/Razifadm/radu/ipk/sms/openssh-sftp-server_9.8p1-1_x86_64.ipk >/dev/null 2>&1
+wget -O /tmp/openssh-sftp-server_9.8p1-1_x86_64.ipk https://raw.githubusercontent.com/Razifadm/radu/ipk/sms/openssh-sftp-server_9.8p1-1_x86_64.ipk >/dev/null 2>&1
 
-wget -O /usr/bin/sms_tool
-https://raw.githubusercontent.com/Razifadm/radu/ipk/sms/sms_tool >/dev/null 2>&1
+wget -O /usr/bin/sms_tool https://raw.githubusercontent.com/Razifadm/radu/ipk/sms/sms_tool >/dev/null 2>&1
 
 # install all ipk
 echo "Installing sms tool"
@@ -24,14 +21,14 @@ chmod 755 /usr/bin/sms_tool >/dev/null 2>&1
 rm -f /tmp/luci-app-sms-tool-js.ipk
 rm -f /tmp/openssh-sftp-server_9.8p1-1_x86_64.ipk
 
-#wget etc/config/sms
+# config sms
 rm -f /etc/config/sms_tool_js
-wget -O /etc/config/sms_tool_js
-https://raw.githubusercontent.com/Razifadm/radu/ipk/sms/sms_tool_js >/dev/null 2>&1
+wget -O /etc/config/sms_tool_js https://raw.githubusercontent.com/Razifadm/radu/ipk/sms/sms_tool_js >/dev/null 2>&1
 uci commit sms_tool_js
 
 # Restart web UI
 /etc/init.d/uhttpd restart
+
 echo ""
 echo "Access Luci-App-sms-tool"
 echo ""
