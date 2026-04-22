@@ -1,0 +1,216 @@
+
+<div id="ipinfo-panel" style="
+    padding:16px;
+    margin:15px;
+    border-radius:16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:#fff;
+
+    background:linear-gradient(135deg,
+        rgba(255,0,150,0.25),
+        rgba(0,0,0,0.75)
+    );
+
+    backdrop-filter:blur(10px);
+    box-shadow:0 0 25px rgba(255,0,150,0.3);
+">
+
+<!-- LEFT -->
+<div style="flex:1">
+
+    <div style="margin-bottom:10px;">
+        <b>IP:</b>
+        <span id="ip">-</span>
+
+        <button type="button" onclick="toggleIP()" style="
+            margin-left:10px;
+            padding:3px 10px;
+            border:none;
+            border-radius:6px;
+            background:#ff4da6;
+            color:#fff;
+            cursor:pointer;
+        ">Hide</button>
+    </div>
+
+    <div><b>Location:</b> <span id="loc">-</span></div>
+    <div><b>ISP:</b> <span id="isp">-</span></div>
+
+    <div><b>Ping:</b> <span id="ping">-</span></div>
+    <div><b>Status:</b> <span id="status">-</span></div>
+
+</div>
+
+<!-- RIGHT -->
+<div style="text-align:center; min-width:140px;">
+    <img id="flag" style="
+        width:120px;
+        border-radius:12px;
+        box-shadow:0 0 15px rgba(255,255,255,0.4);
+    ">
+
+    <div id="cc" style="
+        margin-top:8px;
+        font-weight:bold;
+        letter-spacing:2px;
+    ">--</div>
+</div>
+
+</div>
+
+<script>
+let ipVisible = true;
+
+function toggleIP() {
+    let ip = document.getElementById("ip");
+    if (!ip) return;
+
+    if (ipVisible) {
+        ip.innerText = "●●●●●●●●●";
+    } else {
+        ip.innerText = ip.dataset.real || "-";
+    }
+
+    ipVisible = !ipVisible;
+}
+
+if (!window.__IPINFO_LOADED__) {
+    window.__IPINFO_LOADED__ = true;
+
+    async function loadIP_OC() {
+        try {
+            let panel = document.getElementById("ipinfo-panel");
+            if (!panel) return;
+
+            // Show loading state
+            document.getElementById("ip").innerText = "...";
+            document.getElementById("ping").innerText = "...";
+
+            // PARALLEL FETCH WITH CORRECT ENDPOINTS
+            let ipPromise = fetch('/cgi-bin/luci/pw2ip/info', {
+                cache: "no-store",
+                headers: { 'Cache-Control': 'no-cache' }
+            }).then(r => r.json()).catch(e => {
+                console.error("IP fetch failed:", e);
+                return null;
+            });
+
+            let pingPromise = fetch('/cgi-bin/luci/pw2ip/ping', {
+                cache: "no-store",
+                headers: { 'Cache-Control': 'no-cache' }
+            }).then(r => r.json()).catch(e => {
+                console.error("Ping fetch failed:", e);
+                return null;
+            });
+
+            let [data, pingData] = await Promise.all([ipPromise, pingPromise]);
+
+            // Handle IP data
+            if (data && data.ip) {
+                // Extract data from ip.guide JSON format
+                let cc = data.location?.country || "xx";
+                
+                // Convert country name to country code for flag
+                let countryCode = "";
+                switch(cc) {
+                    case "Singapore": countryCode = "sg"; break;
+                    case "Malaysia": countryCode = "my"; break;
+                    case "United States": countryCode = "us"; break;
+                    case "Japan": countryCode = "jp"; break;
+                    case "Hong Kong": countryCode = "hk"; break;
+                    default: countryCode = cc.substring(0,2).toLowerCase();
+                }
+                
+                let ipEl = document.getElementById("ip");
+
+                // SAVE REAL IP ONCE
+                ipEl.dataset.real = data.ip;
+
+                // APPLY IP (RESPECT HIDE STATE)
+                if (ipVisible) {
+                    ipEl.innerText = ipEl.dataset.real;
+                } else {
+                    ipEl.innerText = "●●●●●●●●●";
+                }
+
+                // Location: city + country
+                let location = "";
+                if (data.location?.city) location += data.location.city;
+                if (data.location?.country) {
+                    if (location) location += ", ";
+                    location += data.location.country;
+                }
+                document.getElementById("loc").innerText = location || "-";
+
+                // ISP/Organization
+                let isp = data.network?.autonomous_system?.organization || 
+                          data.network?.autonomous_system?.name || "-";
+                document.getElementById("isp").innerText = isp;
+
+                document.getElementById("cc").innerText = cc;
+
+                // Set flag with fallback
+                let flagImg = document.getElementById("flag");
+                flagImg.src = "https://flagcdn.com/w160/" + countryCode.toLowerCase() + ".png";
+                flagImg.onerror = function() {
+                    this.src = "https://flagcdn.com/w160/xx.png";
+                };
+
+                // STATUS based on country (adjust proxy countries as needed)
+                let proxyCountries = ["Singapore", "United States", "Japan", "Hong Kong", "Taiwan", "Korea", "Netherlands", "Germany", "United Kingdom"];
+                let statusEl = document.getElementById("status");
+                if (proxyCountries.includes(cc)) {
+                    statusEl.innerText = "PROXY";
+                    statusEl.style.color = "#ff4da6";
+                } else {
+                    statusEl.innerText = "DIRECT";
+                    statusEl.style.color = "#00ff6a";
+                }
+            } else {
+                throw new Error("Invalid IP data");
+            }
+
+            // Handle Ping data
+            let ping = (pingData && pingData.ping) ? parseFloat(pingData.ping) : 0;
+            let pingEl = document.getElementById("ping");
+
+            if (ping > 0 && ping < 1000) {
+                pingEl.innerText = ping.toFixed(1) + " ms";
+                
+                // Color based on latency
+                if (ping < 500) pingEl.style.color = "#00ff6a";      // Excellent
+                else if (ping < 600) pingEl.style.color = "#ffd000"; // Good
+                else if (ping < 700) pingEl.style.color = "#ff9500"; // Fair
+                else pingEl.style.color = "#ff3b3b";                 // Poor
+
+                // BACKGROUND MODE based on ping
+                if (ping < 500) {
+                    panel.style.background = "linear-gradient(135deg, rgba(255,0,150,0.3), rgba(0,0,0,0.75))";
+                } else if (ping < 600) {
+                    panel.style.background = "linear-gradient(135deg, rgba(255,165,0,0.3), rgba(0,0,0,0.75))";
+                } else {
+                    panel.style.background = "linear-gradient(135deg, rgba(255,0,0,0.3), rgba(0,0,0,0.75))";
+                }
+            } else {
+                pingEl.innerText = "N/A";
+                pingEl.style.color = "#ff3b3b";
+            }
+
+        } catch (e) {
+            console.error("loadIP_OC error:", e);
+            let panel = document.getElementById("ipinfo-panel");
+            if (panel) {
+                panel.innerHTML = "<div style='padding:20px; text-align:center'><b style='color:#ff3b3b'>⚠️ API FAIL / NO INTERNET</b><br><small style='color:#888'>Retrying in 5 seconds...</small></div>";
+            }
+        }
+    }
+
+    // Initial load
+    loadIP_OC();
+    
+    // Refresh every 10 seconds (reduced from 5 to avoid rate limiting)
+    setInterval(loadIP_OC, 10000);
+}
+</script>
