@@ -1,0 +1,309 @@
+<div id="ipinfo-panel" style="
+    padding:16px;
+    margin:15px;
+    border-radius:16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:#fff;
+    background:linear-gradient(135deg, rgba(255,0,150,0.25), rgba(0,0,0,0.75));
+    backdrop-filter:blur(10px);
+    box-shadow:0 0 25px rgba(255,0,150,0.3);
+">
+
+    <!-- LEFT -->
+    <div style="flex:1">
+
+        <div style="margin-bottom:10px;">
+            <b>IP:</b>
+            <span id="ip">-</span>
+
+            <button type="button" id="ip-toggle-btn" onclick="toggleIP()" style="
+                margin-left:10px;
+                padding:3px 10px;
+                border:none;
+                border-radius:6px;
+                background:#ff4da6;
+                color:#fff;
+                cursor:pointer;
+            ">Hide</button>
+        </div>
+
+        <div><b>Location:</b> <span id="loc">-</span></div>
+        <div><b>ISP:</b> <span id="isp">-</span></div>
+
+        <div><b>Latency:</b> <span id="ping">-</span></div>
+        <div><b>Status:</b> <span id="status">-</span></div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div style="text-align:center; min-width:140px;">
+        <img id="flag" alt="flag" style="
+            width:120px;
+            border-radius:12px;
+            box-shadow:0 0 15px rgba(255,255,255,0.4);
+            display:none;
+        ">
+
+        <div id="cc" style="
+            margin-top:8px;
+            font-weight:bold;
+            letter-spacing:2px;
+        ">--</div>
+    </div>
+
+</div>
+
+<script>
+let ipVisible = true;
+
+function toggleIP() {
+    let ip = document.getElementById("ip");
+    let btn = document.getElementById("ip-toggle-btn");
+
+    if (!ip) return;
+
+    if (ipVisible) {
+        ip.innerText = "●●●●●●●●●";
+        if (btn) btn.innerText = "Show";
+    } else {
+        ip.innerText = ip.dataset.real || "-";
+        if (btn) btn.innerText = "Hide";
+    }
+
+    ipVisible = !ipVisible;
+}
+
+function countryNameToCode(country, timezone) {
+    let c = (country || "").toLowerCase().trim();
+    let tz = (timezone || "").toLowerCase().trim();
+
+    let map = {
+        "malaysia": "MY",
+        "singapore": "SG",
+        "indonesia": "ID",
+        "thailand": "TH",
+        "vietnam": "VN",
+        "philippines": "PH",
+        "brunei": "BN",
+        "cambodia": "KH",
+        "laos": "LA",
+        "myanmar": "MM",
+
+        "united states": "US",
+        "united kingdom": "GB",
+        "japan": "JP",
+        "south korea": "KR",
+        "korea": "KR",
+        "china": "CN",
+        "hong kong": "HK",
+        "taiwan": "TW",
+        "india": "IN",
+        "australia": "AU",
+        "new zealand": "NZ",
+
+        "germany": "DE",
+        "france": "FR",
+        "netherlands": "NL",
+        "russia": "RU",
+        "canada": "CA"
+    };
+
+    if (map[c]) return map[c];
+
+    if (tz.indexOf("asia/kuala_lumpur") !== -1) return "MY";
+    if (tz.indexOf("asia/singapore") !== -1) return "SG";
+    if (tz.indexOf("asia/jakarta") !== -1) return "ID";
+    if (tz.indexOf("asia/bangkok") !== -1) return "TH";
+    if (tz.indexOf("asia/tokyo") !== -1) return "JP";
+    if (tz.indexOf("asia/seoul") !== -1) return "KR";
+    if (tz.indexOf("america/") !== -1) return "US";
+    if (tz.indexOf("europe/london") !== -1) return "GB";
+
+    return "XX";
+}
+
+if (!window.__IPINFO_LOADED__) {
+    window.__IPINFO_LOADED__ = true;
+
+    async function loadIP_OC() {
+        let panel = document.getElementById("ipinfo-panel");
+        let ipEl = document.getElementById("ip");
+        let locEl = document.getElementById("loc");
+        let ispEl = document.getElementById("isp");
+        let ccEl = document.getElementById("cc");
+        let flagEl = document.getElementById("flag");
+        let pingEl = document.getElementById("ping");
+        let statusEl = document.getElementById("status");
+
+        if (!panel || !ipEl || !locEl || !ispEl || !ccEl || !flagEl || !pingEl || !statusEl) {
+            return;
+        }
+
+        try {
+            let ipPromise = fetch('/cgi-bin/luci/openclash/get_ip?t=' + Date.now(), {
+                cache: "no-store"
+            }).then(function(r) {
+                return r.json();
+            });
+
+            let pingPromise = fetch('/cgi-bin/luci/openclash/ping_test?t=' + Date.now(), {
+                cache: "no-store"
+            }).then(function(r) {
+                return r.json();
+            });
+
+            let result = await Promise.all([ipPromise, pingPromise]);
+            let data = result[0] || {};
+            let pingData = result[1] || {};
+
+            if (data.error) {
+                throw new Error(data.message || "ip api error");
+            }
+
+            // ======================
+            // IP INFO
+            // ======================
+            let realIP = data.ip || "-";
+
+            let city = "-";
+            let country = "-";
+            let timezone = "-";
+
+            if (data.location) {
+                city = data.location.city || "-";
+                country = data.location.country || "-";
+                timezone = data.location.timezone || "-";
+            }
+
+            let isp = "-";
+
+            if (data.network && data.network.autonomous_system) {
+                isp = data.network.autonomous_system.organization ||
+                      data.network.autonomous_system.name ||
+                      "-";
+            }
+
+            let locationCC = countryNameToCode(country, timezone);
+
+            ipEl.dataset.real = realIP;
+
+            if (ipVisible) {
+                ipEl.innerText = realIP;
+            } else {
+                ipEl.innerText = "●●●●●●●●●";
+            }
+
+            locEl.innerText = city + ", " + country;
+            ispEl.innerText = isp;
+
+            if (locationCC && locationCC !== "XX") {
+                ccEl.innerText = locationCC;
+                flagEl.src = "https://flagcdn.com/w160/" + locationCC.toLowerCase() + ".png";
+                flagEl.style.display = "inline-block";
+            } else {
+                ccEl.innerText = "--";
+                flagEl.removeAttribute("src");
+                flagEl.style.display = "none";
+            }
+
+            // ======================
+            // PROXY / DIRECT STATUS
+            // ======================
+            let proxyStatus = "UNKNOWN";
+
+            if (locationCC && locationCC !== "XX") {
+                proxyStatus = (locationCC !== "MY") ? "PROXY" : "DIRECT";
+            }
+
+            // ======================
+            // REAL LATENCY STATUS
+            // ======================
+            let pingAlive = pingData.alive === true;
+            let ping = Number(pingData.ping);
+
+            if (!pingAlive || !Number.isFinite(ping)) {
+                pingEl.innerText = "-";
+                pingEl.style.color = "#ff3b3b";
+
+                statusEl.innerText = proxyStatus + " / LATENCY FAIL";
+                statusEl.style.color = "#ff3b3b";
+
+                panel.style.background =
+                    "linear-gradient(135deg, rgba(255,0,0,0.35), rgba(0,0,0,0.75))";
+
+                panel.style.boxShadow =
+                    "0 0 25px rgba(255,0,0,0.35)";
+
+                return;
+            }
+
+            if (pingData.display && pingData.display !== "-") {
+                pingEl.innerText = pingData.display;
+            } else {
+                pingEl.innerText = ping.toFixed(0) + " ms";
+            }
+
+            if (ping <= 450) {
+                pingEl.style.color = "#00ff6a";
+                statusEl.innerText = proxyStatus;
+                statusEl.style.color = "#00ff6a";
+
+                panel.style.background =
+                    "linear-gradient(135deg, rgba(255,0,150,0.30), rgba(0,0,0,0.75))";
+
+                panel.style.boxShadow =
+                    "0 0 25px rgba(255,0,150,0.30)";
+
+            } else if (ping <= 500) {
+                pingEl.style.color = "#ffd000";
+                statusEl.innerText = proxyStatus;
+                statusEl.style.color = "#ffd000";
+
+                panel.style.background =
+                    "linear-gradient(135deg, rgba(255,180,0,0.30), rgba(0,0,0,0.75))";
+
+                panel.style.boxShadow =
+                    "0 0 25px rgba(255,180,0,0.30)";
+
+            } else {
+                pingEl.style.color = "#ff3b3b";
+                statusEl.innerText = proxyStatus;
+                statusEl.style.color = "#ff3b3b";
+
+                panel.style.background =
+                    "linear-gradient(135deg, rgba(255,80,0,0.35), rgba(0,0,0,0.75))";
+
+                panel.style.boxShadow =
+                    "0 0 25px rgba(255,80,0,0.35)";
+            }
+
+        } catch (e) {
+            console.log(e);
+
+            ipEl.innerText = "-";
+            locEl.innerText = "-";
+            ispEl.innerText = "-";
+            ccEl.innerText = "--";
+            flagEl.removeAttribute("src");
+            flagEl.style.display = "none";
+
+            pingEl.innerText = "-";
+            pingEl.style.color = "#ff3b3b";
+
+            statusEl.innerText = "API FAIL / NO INTERNET";
+            statusEl.style.color = "#ff3b3b";
+
+            panel.style.background =
+                "linear-gradient(135deg, rgba(255,0,0,0.35), rgba(0,0,0,0.75))";
+
+            panel.style.boxShadow =
+                "0 0 25px rgba(255,0,0,0.35)";
+        }
+    }
+
+    setInterval(loadIP_OC, 5000);
+    loadIP_OC();
+}
+</script>
