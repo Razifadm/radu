@@ -1,0 +1,17 @@
+#!/bin/sh
+
+while true; do
+    clear
+    echo "=============================="
+    echo " Running Speedtest"
+    echo " Time: $(date)"
+    echo "=============================="
+
+    speedtest
+
+    echo ""
+    echo "Next run in 2 seconds..."
+    sleep 1
+    echo "lesegoo"
+    sleep 1
+done
