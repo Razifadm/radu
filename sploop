@@ -1,16 +1,137 @@
 #!/bin/sh
 
+# ==========================================================
+# Speedtest Loop Logger
+# Save full result to: /tmp/sploop/
+# CTRL+C = show last 20 summary
+# ==========================================================
+
+LOG_DIR="/tmp/sploop"
+CSV_FILE="$LOG_DIR/summary.csv"
+SLEEP_SECONDS="2"
+
+mkdir -p "$LOG_DIR"
+
+# Create CSV header kalau belum ada
+if [ ! -f "$CSV_FILE" ]; then
+    echo "timestamp,server,isp,idle_latency_ms,idle_jitter_ms,download_mbps,download_latency_ms,upload_mbps,upload_latency_ms,packet_loss,result_url,log_file" > "$CSV_FILE"
+fi
+
+show_summary() {
+    clear
+    echo "=================================================="
+    echo " Speedtest Loop Stopped"
+    echo " Time: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "=================================================="
+    echo ""
+    echo " Last 20 Speedtest Results"
+    echo "=================================================="
+    echo ""
+
+    if [ ! -f "$CSV_FILE" ]; then
+        echo "No summary file found: $CSV_FILE"
+        exit 0
+    fi
+
+    # Buang header, ambil 20 line terakhir
+    tail -n +2 "$CSV_FILE" | tail -n 20 | while IFS=',' read -r \
+        TIMESTAMP SERVER ISP IDLE_LATENCY IDLE_JITTER DOWNLOAD_MBPS DOWNLOAD_LATENCY UPLOAD_MBPS UPLOAD_LATENCY PACKET_LOSS RESULT_URL LOG_FILE
+    do
+        [ -n "$TIMESTAMP" ] || continue
+
+        echo "--------------------------------------------------"
+        echo "Time     : $TIMESTAMP"
+        echo "Ping     : ${IDLE_LATENCY:-N/A} ms"
+        echo "Download : ${DOWNLOAD_MBPS:-N/A} Mbps"
+        echo "Upload   : ${UPLOAD_MBPS:-N/A} Mbps"
+        echo "Result   : ${RESULT_URL:-N/A}"
+    done
+
+    echo "--------------------------------------------------"
+    echo ""
+    echo "Full CSV:"
+    echo "$CSV_FILE"
+    echo ""
+    echo "Latest full log:"
+    echo "$LOG_DIR/latest.log"
+    echo ""
+    exit 0
+}
+
+# Bila user tekan CTRL+C
+trap show_summary INT TERM
+
 while true; do
     clear
+
+    NOW_HUMAN="$(date '+%Y-%m-%d %H:%M:%S')"
+    NOW_FILE="$(date '+%Y%m%d_%H%M%S')"
+    LOG_FILE="$LOG_DIR/speedtest_$NOW_FILE.log"
+
     echo "=============================="
     echo " Running Speedtest"
-    echo " Time: $(date)"
+    echo " Time: $NOW_HUMAN"
+    echo " Log : $LOG_FILE"
     echo "=============================="
+    echo ""
 
-    speedtest
+    {
+        echo "=============================="
+        echo " Running Speedtest"
+        echo " Time: $NOW_HUMAN"
+        echo "=============================="
+        echo ""
+
+        speedtest 2>&1
+
+        echo ""
+        echo "=============================="
+        echo " Finished: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "=============================="
+    } | tee "$LOG_FILE"
+
+    # Update latest log link
+    ln -sf "$LOG_FILE" "$LOG_DIR/latest.log"
+
+    # Extract info dari log
+    SERVER="$(grep -m1 'Server:' "$LOG_FILE" | sed 's/^[[:space:]]*Server:[[:space:]]*//' | sed 's/,/ /g')"
+    ISP="$(grep -m1 'ISP:' "$LOG_FILE" | sed 's/^[[:space:]]*ISP:[[:space:]]*//' | sed 's/,/ /g')"
+
+    IDLE_LINE="$(grep -m1 'Idle Latency:' "$LOG_FILE")"
+    IDLE_LATENCY="$(echo "$IDLE_LINE" | awk '{print $3}')"
+    IDLE_JITTER="$(echo "$IDLE_LINE" | sed -n 's/.*jitter: \([0-9.]*\)ms.*/\1/p')"
+
+    DOWNLOAD_LINE="$(grep -m1 'Download:.*Mbps (data used:' "$LOG_FILE")"
+    DOWNLOAD_MBPS="$(echo "$DOWNLOAD_LINE" | awk '{print $2}')"
+
+    DOWNLOAD_LATENCY_LINE="$(grep -A1 'Download:.*Mbps (data used:' "$LOG_FILE" | tail -n1)"
+    DOWNLOAD_LATENCY="$(echo "$DOWNLOAD_LATENCY_LINE" | awk '{print $1}')"
+
+    UPLOAD_LINE="$(grep -m1 'Upload:.*Mbps (data used:' "$LOG_FILE")"
+    UPLOAD_MBPS="$(echo "$UPLOAD_LINE" | awk '{print $2}')"
+
+    UPLOAD_LATENCY_LINE="$(grep -A1 'Upload:.*Mbps (data used:' "$LOG_FILE" | tail -n1)"
+    UPLOAD_LATENCY="$(echo "$UPLOAD_LATENCY_LINE" | awk '{print $1}')"
+
+    PACKET_LOSS="$(grep -m1 'Packet Loss:' "$LOG_FILE" | sed 's/^[[:space:]]*Packet Loss:[[:space:]]*//' | sed 's/,/ /g')"
+    RESULT_URL="$(grep -m1 'Result URL:' "$LOG_FILE" | awk '{print $3}')"
+
+    # Kalau speedtest gagal total, field kosong tapi log tetap simpan
+    echo "$NOW_HUMAN,$SERVER,$ISP,$IDLE_LATENCY,$IDLE_JITTER,$DOWNLOAD_MBPS,$DOWNLOAD_LATENCY,$UPLOAD_MBPS,$UPLOAD_LATENCY,$PACKET_LOSS,$RESULT_URL,$LOG_FILE" >> "$CSV_FILE"
 
     echo ""
-    echo "Next run in 2 seconds..."
+    echo "=============================="
+    echo " Saved log:"
+    echo " $LOG_FILE"
+    echo ""
+    echo " Latest log:"
+    echo " $LOG_DIR/latest.log"
+    echo ""
+    echo " Summary CSV:"
+    echo " $CSV_FILE"
+    echo "=============================="
+    echo ""
+    echo "Next run in $SLEEP_SECONDS seconds..."
     sleep 1
     echo "lesegoo"
     sleep 1
