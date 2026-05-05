@@ -1,0 +1,96 @@
+#!/bin/sh
+
+# ==========================================================
+# Install luci-app-helium for OpenWrt
+# Auto answer YES for helium install prompt
+# ==========================================================
+
+HELIUM_BIN="/usr/sbin/helium"
+HELIUM_URL="https://cdn.jsdelivr.net/gh/mss-col/helium@main/helium"
+
+IPK_FILE="/tmp/luci-app-helium.ipk"
+IPK_URL="https://github.com/mss-col/openwrt-packages/raw/main/packages/all/luci-app-helium_4.2.6-1_all.ipk"
+
+echo "=========================================="
+echo " Installing Helium + luci-app-helium"
+echo "=========================================="
+echo ""
+
+check_cmd() {
+	command -v "$1" >/dev/null 2>&1
+}
+
+fail_exit() {
+	echo ""
+	echo "[ERROR] $1"
+	exit 1
+}
+
+echo "[1/6] Checking required commands..."
+
+check_cmd wget || fail_exit "wget tidak dijumpai. Sila install wget dulu."
+check_cmd opkg || fail_exit "opkg tidak dijumpai. Pastikan ini OpenWrt/ImmortalWrt."
+
+echo "[OK] Required commands available."
+echo ""
+
+echo "[2/6] Download helium binary..."
+wget -O "$HELIUM_BIN" "$HELIUM_URL" || fail_exit "Gagal download helium binary."
+
+chmod +x "$HELIUM_BIN" || fail_exit "Gagal chmod +x $HELIUM_BIN."
+
+echo "[OK] Helium binary installed at $HELIUM_BIN"
+echo ""
+
+echo "[3/6] Running helium first setup with auto YES..."
+printf 'y\n' | "$HELIUM_BIN"
+
+HELIUM_EXIT="$?"
+
+if [ "$HELIUM_EXIT" != "0" ]; then
+	echo ""
+	echo "[WARNING] helium selesai dengan exit code: $HELIUM_EXIT"
+	echo "Teruskan install luci-app-helium..."
+else
+	echo "[OK] helium first setup completed."
+fi
+
+echo ""
+
+echo "[4/6] Updating opkg package list..."
+opkg update || echo "[WARNING] opkg update gagal, cuba terus install IPK..."
+
+echo ""
+
+echo "[5/6] Download luci-app-helium IPK..."
+rm -f "$IPK_FILE"
+
+wget -O "$IPK_FILE" "$IPK_URL" || fail_exit "Gagal download luci-app-helium IPK."
+
+if [ ! -s "$IPK_FILE" ]; then
+	fail_exit "Fail IPK kosong atau tidak sah: $IPK_FILE"
+fi
+
+echo "[OK] IPK downloaded: $IPK_FILE"
+echo ""
+
+echo "[6/6] Installing luci-app-helium..."
+opkg install "$IPK_FILE" || fail_exit "Gagal install luci-app-helium."
+
+echo ""
+echo "=========================================="
+echo " Installation completed"
+echo "=========================================="
+echo ""
+echo "Helium binary:"
+echo "  $HELIUM_BIN"
+echo ""
+echo "LuCI app installed:"
+echo "  luci-app-helium"
+echo ""
+echo "Restarting LuCI services..."
+/etc/init.d/rpcd restart 2>/dev/null
+/etc/init.d/uhttpd restart 2>/dev/null
+
+echo ""
+echo "[DONE] Buka LuCI semula dan check menu Helium."
