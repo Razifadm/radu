@@ -1,0 +1,265 @@
+#!/bin/sh
+# ==========================================================
+# luci-app-neko Installer for OpenWrt
+# Repo: https://github.com/nosignals/openwrt-neko
+# ==========================================================
+
+set -u
+
+REPO="nosignals/openwrt-neko"
+API_BASE="https://api.github.com/repos/${REPO}"
+WORKDIR="/tmp/neko-install"
+LOGFILE="/tmp/neko-install.log"
+
+INSTALL_CORE="${INSTALL_CORE:-1}"
+FORCE_REINSTALL="${FORCE_REINSTALL:-1}"
+
+mkdir -p "$WORKDIR"
+: > "$LOGFILE"
+
+log() {
+    echo "$@"
+    echo "$@" >> "$LOGFILE"
+}
+
+die() {
+    log ""
+    log "ERROR: $*"
+    log "Log file: $LOGFILE"
+    exit 1
+}
+
+have_cmd() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+download() {
+    URL="$1"
+    OUT="$2"
+
+    rm -f "$OUT"
+
+    if have_cmd curl; then
+        curl -L --connect-timeout 15 --max-time 300 -o "$OUT" "$URL" >> "$LOGFILE" 2>&1
+    elif have_cmd wget; then
+        wget -O "$OUT" "$URL" >> "$LOGFILE" 2>&1
+    else
+        die "curl/wget tiada. Install curl atau wget dulu."
+    fi
+
+    [ -s "$OUT" ] || die "Download gagal: $URL"
+}
+
+fetch_url_list() {
+    OUT="$1"
+    rm -f "$OUT"
+
+    if have_cmd curl; then
+        curl -L --connect-timeout 15 --max-time 120 \
+            -H "Accept: application/vnd.github+json" \
+            "$API_BASE/releases?per_page=30" 2>>"$LOGFILE" \
+            | sed -n 's/.*"browser_download_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' > "$OUT"
+    elif have_cmd wget; then
+        wget -qO- --header="Accept: application/vnd.github+json" \
+            "$API_BASE/releases?per_page=30" 2>>"$LOGFILE" \
+            | sed -n 's/.*"browser_download_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' > "$OUT"
+    else
+        die "curl/wget tiada untuk fetch GitHub API."
+    fi
+
+    [ -s "$OUT" ] || die "Tak dapat baca release asset dari GitHub API."
+}
+
+detect_arch_keys() {
+    UNAME_M="$(uname -m 2>/dev/null || echo unknown)"
+    OPKG_ARCH="$(opkg print-architecture 2>/dev/null | awk '{print $2}' | grep -vE '^(all|noarch)$' | tail -n 1)"
+
+    ARCH_KEYS=""
+
+    case "$UNAME_M" in
+        aarch64|arm64)
+            ARCH_KEYS="$ARCH_KEYS aarch64 arm64 aarch64_generic aarch64-generic aarch64_cortex-a53 aarch64_cortex-a72"
+        ;;
+        x86_64|amd64)
+            ARCH_KEYS="$ARCH_KEYS x86_64 amd64 x86"
+        ;;
+        armv7l|armv7*)
+            ARCH_KEYS="$ARCH_KEYS armv7 arm_cortex-a7_neon cortex-a7 arm_cortex-a15_neon-vfpv4"
+        ;;
+        armv8l)
+            ARCH_KEYS="$ARCH_KEYS armv8 armv7 arm_cortex-a7_neon"
+        ;;
+        mipsel)
+            ARCH_KEYS="$ARCH_KEYS mipsel mipsel_24kc"
+        ;;
+        mips)
+            ARCH_KEYS="$ARCH_KEYS mips mips_24kc"
+        ;;
+    esac
+
+    [ -n "${OPKG_ARCH:-}" ] && ARCH_KEYS="$OPKG_ARCH $ARCH_KEYS"
+
+    echo "$ARCH_KEYS" | tr ' ' '\n' | awk 'NF && !seen[$0]++' | tr '\n' ' '
+}
+
+pick_luci_ipk() {
+    URLS_FILE="$1"
+
+    grep -Ei '/luci-app-neko_.*\.ipk$' "$URLS_FILE" | \
+        grep -Ei '(_all_|all|generic|noarch)' | \
+        head -n 1
+}
+
+pick_core_ipk() {
+    URLS_FILE="$1"
+    NAME="$2"
+    KEYS="$3"
+
+    for key in $KEYS; do
+        FOUND="$(grep -Ei "/${NAME}_.*${key}.*\.ipk$" "$URLS_FILE" | head -n 1 || true)"
+        if [ -n "$FOUND" ]; then
+            echo "$FOUND"
+            return 0
+        fi
+    done
+
+    grep -Ei "/${NAME}_.*\.ipk$" "$URLS_FILE" | head -n 1
+}
+
+install_pkg_if_available() {
+    PKG="$1"
+    opkg install "$PKG" >> "$LOGFILE" 2>&1
+}
+
+install_deps() {
+    log "==> Update opkg..."
+    opkg update >> "$LOGFILE" 2>&1 || log "WARNING: opkg update gagal, cuba terus install dependency..."
+
+    log "==> Install dependency asas..."
+    BASE_DEPS="bash curl ca-bundle kmod-tun ip-full jq nftables"
+
+    for p in $BASE_DEPS; do
+        install_pkg_if_available "$p" || log "WARNING: gagal/skip dependency: $p"
+    done
+
+    log "==> Install PHP dependency..."
+    if opkg list 2>/dev/null | grep -q '^php8 '; then
+        install_pkg_if_available php8 || log "WARNING: gagal install php8"
+        install_pkg_if_available php8-cgi || log "WARNING: gagal install php8-cgi"
+    else
+        install_pkg_if_available php || log "WARNING: gagal install php"
+        install_pkg_if_available php-cgi || log "WARNING: gagal install php-cgi"
+    fi
+}
+
+remove_old_neko() {
+    if opkg list-installed 2>/dev/null | grep -q '^luci-app-neko '; then
+        log "==> Remove luci-app-neko lama..."
+        opkg remove luci-app-neko >> "$LOGFILE" 2>&1 || log "WARNING: gagal remove luci-app-neko lama, teruskan..."
+    fi
+}
+
+install_ipk() {
+    IPK="$1"
+    LABEL="$2"
+
+    [ -s "$IPK" ] || die "$LABEL IPK tidak wujud: $IPK"
+
+    log "==> Install $LABEL..."
+
+    if [ "$FORCE_REINSTALL" = "1" ]; then
+        opkg install --force-reinstall "$IPK" >> "$LOGFILE" 2>&1 || die "Gagal install $LABEL"
+    else
+        opkg install "$IPK" >> "$LOGFILE" 2>&1 || die "Gagal install $LABEL"
+    fi
+}
+
+restart_luci() {
+    log "==> Clear LuCI cache..."
+    rm -rf /tmp/luci-indexcache /tmp/luci-modulecache /tmp/luci-sessions/* 2>/dev/null || true
+
+    log "==> Restart LuCI service..."
+    /etc/init.d/rpcd restart >> "$LOGFILE" 2>&1 || true
+    /etc/init.d/uhttpd restart >> "$LOGFILE" 2>&1 || true
+
+    if [ -x /etc/init.d/neko ]; then
+        log "==> Enable/restart neko service..."
+        /etc/init.d/neko enable >> "$LOGFILE" 2>&1 || true
+        /etc/init.d/neko restart >> "$LOGFILE" 2>&1 || true
+    fi
+}
+
+print_summary() {
+    log ""
+    log "=================================================="
+    log " Install luci-app-neko selesai."
+    log "=================================================="
+    log "Buka LuCI:"
+    log "  Services > Neko"
+    log ""
+    log "Kalau menu belum keluar:"
+    log "  rm -rf /tmp/luci-*"
+    log "  /etc/init.d/rpcd restart"
+    log "  /etc/init.d/uhttpd restart"
+    log ""
+    log "Check package:"
+    log "  opkg list-installed | grep -E 'neko|mihomo|sing-box'"
+    log ""
+    log "Log:"
+    log "  $LOGFILE"
+    log "=================================================="
+}
+
+main() {
+    log "=================================================="
+    log " luci-app-neko installer for OpenWrt"
+    log " Repo: https://github.com/${REPO}"
+    log "=================================================="
+
+    [ "$(id -u)" = "0" ] || die "Skrip mesti run sebagai root."
+
+    install_deps
+
+    URLS_FILE="$WORKDIR/release_urls.txt"
+    fetch_url_list "$URLS_FILE"
+
+    ARCH_KEYS="$(detect_arch_keys)"
+    log "==> Detected arch keys: $ARCH_KEYS"
+
+    if [ "$INSTALL_CORE" = "1" ]; then
+        MIHOMO_URL="$(pick_core_ipk "$URLS_FILE" "mihomo" "$ARCH_KEYS" || true)"
+        SINGBOX_URL="$(pick_core_ipk "$URLS_FILE" "sing-box" "$ARCH_KEYS" || true)"
+
+        [ -n "${MIHOMO_URL:-}" ] || die "Tak jumpa asset mihomo sesuai untuk arch router ini."
+        [ -n "${SINGBOX_URL:-}" ] || die "Tak jumpa asset sing-box sesuai untuk arch router ini."
+
+        log "==> Mihomo URL:"
+        log "    $MIHOMO_URL"
+        log "==> Sing-box URL:"
+        log "    $SINGBOX_URL"
+
+        download "$MIHOMO_URL" "$WORKDIR/mihomo.ipk"
+        download "$SINGBOX_URL" "$WORKDIR/sing-box.ipk"
+
+        install_ipk "$WORKDIR/mihomo.ipk" "mihomo"
+        install_ipk "$WORKDIR/sing-box.ipk" "sing-box"
+    else
+        log "==> INSTALL_CORE=0, skip mihomo/sing-box."
+    fi
+
+    LUCI_URL="$(pick_luci_ipk "$URLS_FILE" || true)"
+    [ -n "${LUCI_URL:-}" ] || die "Tak jumpa asset luci-app-neko IPK."
+
+    log "==> luci-app-neko URL:"
+    log "    $LUCI_URL"
+
+    download "$LUCI_URL" "$WORKDIR/luci-app-neko.ipk"
+
+    remove_old_neko
+    install_ipk "$WORKDIR/luci-app-neko.ipk" "luci-app-neko"
+
+    restart_luci
+    print_summary
+}
+
+main "$@"
