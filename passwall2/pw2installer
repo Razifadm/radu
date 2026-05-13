@@ -33,7 +33,7 @@ rm -f /var/lock/opkg.lock
 
 echo "installing...2"
 opkg update && opkg install --nodeps luci-app-passwall2 >/dev/null 2>&1 
-
+opkg install lyaml >/dev/null 2>&1
 # 🧹 Remove opkg lock kalau tersangkut
 rm -f /var/lock/opkg.lock
 
