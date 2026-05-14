@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Variabel
+URL="https://github.com/Razifadm/radu/releases/download/FBD-QMODEM-V2/FBD-Qmodem-v2-4Sept25.bin"
+FILE="/tmp/firmware.bin"
+
+echo "--------------------------------------------------"
+echo "  OpenWrt Auto-Sysupgrade: FBD-QMODEM-V2          "
+echo "  Author: Raducksijaa                             "
+echo "--------------------------------------------------"
+
+
+echo "Downloading firmware..."
+wget -q --show-progress "$URL" -O "$FILE"
+
+
+if [ $? -eq 0 ]; then
+    echo "[OK] Download siap."
+
+    echo "[WARNING] Starting flash "
+    echo "DO NOT POWER OFF!!"
+    sleep 2
+    
+    sysupgrade -n "$FILE"
+else
+    echo "[ERROR] Download Failed!! Please Check Internet"
+    exit 1
+fi
