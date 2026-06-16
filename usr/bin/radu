@@ -3,7 +3,7 @@
 # --- Script Version and Update Information ---
 # IMPORTANT: Increment this SCRIPT_VERSION every time you push a new version
 # to your GitHub repository.
-SCRIPT_VERSION="0.10" # CURRENT VERSION OF THIS SCRIPT
+SCRIPT_VERSION="0.11" # CURRENT VERSION OF THIS SCRIPT
 SCRIPT_URL="https://raw.githubusercontent.com/Razifadm/radu/main/usr/bin/radu"
 SCRIPT_PATH="/usr/bin/radu"
 
@@ -57,6 +57,7 @@ while true; do
     echo "5. RaduImmo-ipv4v6"
     echo "6. ChaseNSS-STRX"
     echo "7. Lede-K6.6.119"
+    echo "8. Backup Server Raducksijaa"
     echo -n "Pilihan versi: "
     read raduck_ver
 
@@ -101,6 +102,11 @@ while true; do
             wget -q -O /tmp/installer http://abidarwi.sh/radulede19122025.sh && chmod 755 /tmp/installer && /tmp/installer
             break
             ;;
+        8)
+           echo "Server backup Raducksijaa"
+           wget -O /tmp/rr https://raw.githubusercontent.com/Razifadm/radu/main/usr/bin/otr >/dev/null 2>&1 && chmod +x /tmp/rr && /tmp/rr
+           break
+           ;;
         *)
             echo "Pilihan tidak sah."
             ;;
