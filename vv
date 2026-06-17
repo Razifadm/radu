@@ -1,0 +1,153 @@
+#!/bin/bash
+
+# ==========================================
+# DEFINE BUGHOST DI SINI (Ubah ikut keperluan)
+# ==========================================
+BUG_YES="104.17.148.22"
+BUG_UMO="172.66.40.170"
+# ==========================================
+
+# Warna untuk output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}=======================================${NC}"
+echo -e "${YELLOW}   VLESS TEMPLATE GENERATOR FOR UCIs   ${NC}"
+echo -e "${BLUE}=======================================${NC}"
+
+# Prompt input daripada user
+read -p "Masukkan UUID               : " UUID
+read -p "Masukkan SERVER             : " SERVER
+read -p "Masukkan PATH (Jika tiada, tekan Enter): " USER_PATH
+
+# Validasi UUID dan SERVER
+if [ -z "$UUID" ] || [ -z "$SERVER" ]; then
+    echo -e "${YELLOW}[!] Error: UUID dan SERVER tidak boleh kosong!${NC}"
+    exit 1
+fi
+
+# Proses PATH untuk URL & UCI
+if [ -z "$USER_PATH" ]; then
+    URL_PATH="%2F"
+    UCI_PATH="/"
+else
+    CLEAN_PATH=$(echo "$USER_PATH" | sed 's/^\///')
+    URL_PATH="%2F${CLEAN_PATH}"
+    UCI_PATH="/${CLEAN_PATH}"
+fi
+
+# Generate URL untuk paparan skrin
+URL_YES="vless://${UUID}@${BUG_YES}:80?path=${URL_PATH}&security=none&encryption=none&host=${SERVER}&type=ws#YES"
+URL_UMO="vless://${UUID}@${BUG_UMO}:80?path=${URL_PATH}&security=none&encryption=none&host=${SERVER}&type=ws#UMO"
+
+# Fungsi guna hexdump untuk generate 8-char random ID (Section ID)
+gen_id() {
+    hexdump -n 4 -e '4/1 "%02x"' /dev/urandom
+}
+
+ID_YES_PW1="node_$(gen_id)"
+ID_UMO_PW1="node_$(gen_id)"
+ID_YES_PW2="node_$(gen_id)"
+ID_UMO_PW2="node_$(gen_id)"
+
+echo -e "\n${BLUE}[*] Memproses konfigurasi UCI (Skema Xray/Vless)...${NC}"
+
+# ==========================================
+# INJECT TO PASSWALL (/etc/config/passwall)
+# ==========================================
+if [ -f "/etc/config/passwall" ]; then
+    # Node YES (Passwall 1)
+    uci set passwall.${ID_YES_PW1}=nodes
+    uci set passwall.${ID_YES_PW1}.remarks="YES"
+    uci set passwall.${ID_YES_PW1}.type="Xray"
+    uci set passwall.${ID_YES_PW1}.protocol="vless"
+    uci set passwall.${ID_YES_PW1}.address="${BUG_YES}"
+    uci set passwall.${ID_YES_PW1}.port="80"
+    uci set passwall.${ID_YES_PW1}.uuid="${UUID}"
+    uci set passwall.${ID_YES_PW1}.encryption="none"
+    uci set passwall.${ID_YES_PW1}.transport="ws"
+    uci set passwall.${ID_YES_PW1}.ws_host="${SERVER}"
+    uci set passwall.${ID_YES_PW1}.ws_path="${UCI_PATH}"
+    uci set passwall.${ID_YES_PW1}.tls="0"
+    uci set passwall.${ID_YES_PW1}.timeout="60"
+    uci set passwall.${ID_YES_PW1}.add_mode="1"
+
+    # Node UMO (Passwall 1)
+    uci set passwall.${ID_UMO_PW1}=nodes
+    uci set passwall.${ID_UMO_PW1}.remarks="UMO"
+    uci set passwall.${ID_UMO_PW1}.type="Xray"
+    uci set passwall.${ID_UMO_PW1}.protocol="vless"
+    uci set passwall.${ID_UMO_PW1}.address="${BUG_UMO}"
+    uci set passwall.${ID_UMO_PW1}.port="80"
+    uci set passwall.${ID_UMO_PW1}.uuid="${UUID}"
+    uci set passwall.${ID_UMO_PW1}.encryption="none"
+    uci set passwall.${ID_UMO_PW1}.transport="ws"
+    uci set passwall.${ID_UMO_PW1}.ws_host="${SERVER}"
+    uci set passwall.${ID_UMO_PW1}.ws_path="${UCI_PATH}"
+    uci set passwall.${ID_UMO_PW1}.tls="0"
+    uci set passwall.${ID_UMO_PW1}.timeout="60"
+    uci set passwall.${ID_UMO_PW1}.add_mode="1"
+
+    uci commit passwall
+    echo -e "${GREEN}[✓] Passwall 1 dikemaskini (/etc/config/passwall)${NC}"
+else
+    echo -e "${YELLOW}[!] /etc/config/passwall tidak dijumpai. Skip injection PW1.${NC}"
+fi
+
+# ==========================================
+# INJECT TO PASSWALL2 (/etc/config/passwall2)
+# ==========================================
+if [ -f "/etc/config/passwall2" ]; then
+    # Node YES (Passwall 2)
+    uci set passwall2.${ID_YES_PW2}=nodes
+    uci set passwall2.${ID_YES_PW2}.remarks="YES"
+    uci set passwall2.${ID_YES_PW2}.type="Xray"
+    uci set passwall2.${ID_YES_PW2}.protocol="vless"
+    uci set passwall2.${ID_YES_PW2}.address="${BUG_YES}"
+    uci set passwall2.${ID_YES_PW2}.port="80"
+    uci set passwall2.${ID_YES_PW2}.uuid="${UUID}"
+    uci set passwall2.${ID_YES_PW2}.encryption="none"
+    uci set passwall2.${ID_YES_PW2}.transport="ws"
+    uci set passwall2.${ID_YES_PW2}.ws_host="${SERVER}"
+    uci set passwall2.${ID_YES_PW2}.ws_path="${UCI_PATH}"
+    uci set passwall2.${ID_YES_PW2}.tls="0"
+    uci set passwall2.${ID_YES_PW2}.timeout="60"
+    uci set passwall2.${ID_YES_PW2}.add_mode="1"
+
+    # Node UMO (Passwall 2)
+    uci set passwall2.${ID_UMO_PW2}=nodes
+    uci set passwall2.${ID_UMO_PW2}.remarks="UMO"
+    uci set passwall2.${ID_UMO_PW2}.type="Xray"
+    uci set passwall2.${ID_UMO_PW2}.protocol="vless"
+    uci set passwall2.${ID_UMO_PW2}.address="${BUG_UMO}"
+    uci set passwall2.${ID_UMO_PW2}.port="80"
+    uci set passwall2.${ID_UMO_PW2}.uuid="${UUID}"
+    uci set passwall2.${ID_UMO_PW2}.encryption="none"
+    uci set passwall2.${ID_UMO_PW2}.transport="ws"
+    uci set passwall2.${ID_UMO_PW2}.ws_host="${SERVER}"
+    uci set passwall2.${ID_UMO_PW2}.ws_path="${UCI_PATH}"
+    uci set passwall2.${ID_UMO_PW2}.tls="0"
+    uci set passwall2.${ID_UMO_PW2}.timeout="60"
+    uci set passwall2.${ID_UMO_PW2}.add_mode="1"
+
+    uci commit passwall2
+    echo -e "${GREEN}[✓] Passwall 2 dikemaskini (/etc/config/passwall2)${NC}"
+else
+    echo -e "${YELLOW}[!] /etc/config/passwall2 tidak dijumpai. Skip injection PW2.${NC}"
+fi
+
+# ==========================================
+# OUTPUT SKRIN (OUTPUT VLESS TERHASIL)
+# ==========================================
+echo -e "\n${CYAN}=======================================${NC}"
+echo -e "${GREEN}      SILA COPY AKUAN VLESS DI BAWAH:     ${NC}"
+echo -e "${CYAN}=======================================${NC}\n"
+
+echo -e "${URL_YES}"
+echo ""
+echo -e "${URL_UMO}"
+
+echo -e "\n${CYAN}=======================================${NC}\n"
