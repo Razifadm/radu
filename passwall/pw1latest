@@ -1,0 +1,57 @@
+#!/bin/sh
+set -e
+
+echo "== Repair & Install luci-app-passwall =="
+
+[ "$(id -u)" = "0" ] || {
+  echo "Jalankan sebagai root."
+  exit 1
+}
+
+command -v opkg >/dev/null || {
+  echo "Sistem ini bukan opkg/opkg tidak ada."
+  exit 1
+}
+
+ARCH="$(. /etc/openwrt_release; echo "$DISTRIB_ARCH")"
+
+# Fix untuk ImmortalWrt 24.10.x yang kadang terbaca SNAPSHOT
+if grep -q "24.10" /etc/opkg/distfeeds.conf 2>/dev/null; then
+  OWRT_VER="24.10"
+else
+  OWRT_VER="$(. /etc/openwrt_release; echo "$DISTRIB_RELEASE" | grep -oE '[0-9]+\.[0-9]+' | head -n1)"
+fi
+
+[ -n "$OWRT_VER" ] || {
+  echo "Gagal detect versi OpenWrt/ImmortalWrt."
+  echo "Cek manual: cat /etc/openwrt_release && cat /etc/opkg/distfeeds.conf"
+  exit 1
+}
+
+FEED_BASE="https://master.dl.sourceforge.net/project/openwrt-passwall-build/releases/packages-${OWRT_VER}/${ARCH}"
+
+echo "Versi feed : packages-${OWRT_VER}"
+echo "Arsitektur : ${ARCH}"
+
+echo "Bersihkan feed PassWall lama..."
+sed -i '/passwall_/d' /etc/opkg/customfeeds.conf 2>/dev/null || true
+touch /etc/opkg/customfeeds.conf
+
+cat >> /etc/opkg/customfeeds.conf <<EOF2
+src/gz passwall_packages ${FEED_BASE}/passwall_packages
+src/gz passwall_luci ${FEED_BASE}/passwall_luci
+EOF2
+
+echo "Update opkg..."
+opkg update
+
+echo "Install dependensi dasar..."
+opkg install curl ca-bundle wget-ssl unzip luci-compat || true
+
+echo "Install PassWall..."
+opkg install luci-app-passwall
+
+echo "Restart LuCI..."
+/etc/init.d/uhttpd restart 2>/dev/null || true
+
+echo "Selesai. Buka LuCI > Services > PassWall."
