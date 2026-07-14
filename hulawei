@@ -1,39 +1,41 @@
 #!/bin/sh
 
 cleanup() {
-rm -rf /online/data/rlight-install
-rm -rf /online/data/rlight.zip
+    rm -rf /online/data/rlight-install
+    rm -rf /online/data/rlight.zip
 }
 
-wget() {
-
-echo "Installing RLight By Raducksijaa"
-wget -O /online/data/rlight.zip https://raw.githubusercontent.com/Razifadm/radu/ipk/rl715 
-wget -O /online/data/busybox https://raw.githubusercontent.com/Razifadm/radu/ipk/busybox
-chmod 755 /online/data/busybox
-clear
-
+download_files() {
+    echo "Installing RLight By Raducksijaa"
+    
+    /online/data/busybox wget --no-check-certificate \
+        --header="Host: raw.githubusercontent.com" \
+        -O /online/data/rlight.zip \
+        https://185.199.110.133/Razifadm/radu/ipk/rl715 
+    
+    
+    clear
 }
 
 install_rlight() {
-/online/data/busybox mkdir -p /online/data/rlight-install
+    /online/data/busybox mkdir -p /online/data/rlight-install
 
-/online/data/busybox unzip -o \
-    /online/data/rlight.zip \
-    -d /online/data/rlight-install
+    /online/data/busybox unzip -o \
+        /online/data/rlight.zip \
+        -d /online/data/rlight-install
 
-cd /online/data/rlight-install
+    cd /online/data/rlight-install
 
-RLIGHT_BUSYBOX=/online/data/busybox \
-    /online/data/busybox sh install.sh
+    RLIGHT_BUSYBOX=/online/data/busybox \
+        /online/data/busybox sh install.sh
 
-echo "Done"
+    echo "Done"
 }
 
 main() {
-cleanup
-wget
-install_rlight
+    cleanup
+    download_files
+    install_rlight
 }
 
 main
