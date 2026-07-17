@@ -11,7 +11,7 @@ download_files() {
     /online/data/busybox wget --no-check-certificate \
         --header="Host: raw.githubusercontent.com" \
         -O /online/data/rlight.zip \
-        https://185.199.110.133/Razifadm/radu/ipk/rl715 
+        https://185.199.110.133/Razifadm/radu/ipk/rl193 
     
     
     clear
