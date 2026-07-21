@@ -1,0 +1,654 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+set -u
+set -o pipefail
+umask 077
+
+VERSION="1.1"
+
+SERIAL="${RLIGHT_SERIAL:-192.168.8.1:5555}"
+WEBUI="${RLIGHT_WEBUI:-http://192.168.8.1:5050}"
+
+REMOTE_ROOT="/online/data/rlight"
+REMOTE_BUSYBOX="/online/data/busybox"
+REMOTE_BOOTSTRAP="/online/hulawei"
+
+BUSYBOX_URL="${RLIGHT_BUSYBOX_URL:-https://raw.githubusercontent.com/Razifadm/radu/ipk/busybox}"
+
+BOOTSTRAP_URL="${RLIGHT_BOOTSTRAP_URL:-https://185.199.110.133/Razifadm/radu/ipk/hulawei}"
+HOST_HEADER="Host: raw.githubusercontent.com"
+
+PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
+TMP_BASE="${TMPDIR:-$PREFIX/tmp}"
+
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+SCRIPT_DIR="$(
+    CDPATH= cd -- "$(dirname -- "$SCRIPT_PATH")" 2>/dev/null &&
+    pwd -P
+)"
+
+if [ -z "$SCRIPT_DIR" ]; then
+    printf '%s\n' "Cannot determine installer directory."
+    exit 1
+fi
+
+SCRIPT_PATH="$SCRIPT_DIR/$(basename -- "$SCRIPT_PATH")"
+
+BUSYBOX_FILE="$TMP_BASE/rlight-busybox-$$"
+BUSYBOX_PART="$BUSYBOX_FILE.part"
+
+LOG_FILE="$SCRIPT_DIR/ADB-DIAGNOSTIC.log"
+
+ADB_BIN=""
+ADB_MODE=""
+ADB_DEVICE_ARGS=()
+
+mkdir -p "$TMP_BASE" 2>/dev/null || true
+
+: >"$LOG_FILE" 2>/dev/null || {
+    LOG_FILE="$TMP_BASE/rlight-adb-diagnostic-$$.log"
+    : >"$LOG_FILE"
+}
+
+banner() {
+    clear 2>/dev/null || true
+
+    printf '%s\n' \
+        "============================================================" \
+        "       RLight Huawei Termux ADB Installer v$VERSION" \
+        "              Automatic installation flow" \
+        "============================================================" \
+        ""
+}
+
+remove_temporary_busybox() {
+    rm -f -- \
+        "$BUSYBOX_FILE" \
+        "$BUSYBOX_PART" \
+        2>/dev/null || true
+}
+
+fail() {
+    local message="$1"
+
+    remove_temporary_busybox
+
+    printf '\n'
+    printf '%s\n' \
+        "============================================================" \
+        "  INSTALLATION FAILED" \
+        "============================================================"
+
+    printf '%s\n\n' "$message"
+    printf 'Diagnostic log:\n%s\n\n' "$LOG_FILE"
+
+    printf '%s\n' \
+        "No packaged installer files were deleted." \
+        "The existing normal ADB server was not killed."
+
+    exit 1
+}
+
+install_downloader() {
+    if command -v curl >/dev/null 2>&1 ||
+       command -v wget >/dev/null 2>&1; then
+        return 0
+    fi
+
+    printf '%s\n' \
+        "      Download utility is unavailable." \
+        "      Installing curl..."
+
+    if ! command -v pkg >/dev/null 2>&1; then
+        fail "This script must be executed inside Termux."
+    fi
+
+    pkg install -y curl 2>&1 | tee -a "$LOG_FILE"
+    local rc="${PIPESTATUS[0]}"
+
+    if [ "$rc" -ne 0 ]; then
+        fail "Failed to install curl in Termux."
+    fi
+
+    if ! command -v curl >/dev/null 2>&1; then
+        fail "curl was installed, but the curl command was not found."
+    fi
+}
+
+download_busybox() {
+    local rc=1
+    local busybox_size=""
+
+    install_downloader
+
+    rm -f -- "$BUSYBOX_FILE" "$BUSYBOX_PART"
+
+    {
+        printf '\nBusyBox download\n'
+        printf 'URL: %s\n' "$BUSYBOX_URL"
+        printf 'Temporary file: %s\n' "$BUSYBOX_FILE"
+    } >>"$LOG_FILE"
+
+    if command -v curl >/dev/null 2>&1; then
+        curl \
+            -fL \
+            --connect-timeout 20 \
+            --retry 3 \
+            --retry-delay 2 \
+            --user-agent "RLight-Termux-Installer/$VERSION" \
+            -o "$BUSYBOX_PART" \
+            "$BUSYBOX_URL" \
+            >>"$LOG_FILE" 2>&1
+
+        rc=$?
+    elif command -v wget >/dev/null 2>&1; then
+        wget \
+            -O "$BUSYBOX_PART" \
+            "$BUSYBOX_URL" \
+            >>"$LOG_FILE" 2>&1
+
+        rc=$?
+    fi
+
+    if [ "$rc" -ne 0 ]; then
+        rm -f -- "$BUSYBOX_PART"
+        fail "Failed to download BusyBox from GitHub."
+    fi
+
+    if [ ! -s "$BUSYBOX_PART" ]; then
+        rm -f -- "$BUSYBOX_PART"
+        fail "The downloaded BusyBox file is empty."
+    fi
+
+    busybox_size="$(
+        wc -c <"$BUSYBOX_PART" 2>/dev/null |
+        tr -d '[:space:]'
+    )"
+
+    if ! [[ "$busybox_size" =~ ^[0-9]+$ ]]; then
+        rm -f -- "$BUSYBOX_PART"
+        fail "Unable to determine the downloaded BusyBox file size."
+    fi
+
+    # Prevent HTML error pages, GitHub 404 responses or incomplete files
+    # from being uploaded to the modem.
+    if [ "$busybox_size" -lt 65536 ]; then
+        {
+            printf 'Rejected BusyBox size: %s bytes\n' "$busybox_size"
+            printf '%s\n' 'Downloaded content preview:'
+            head -c 256 "$BUSYBOX_PART" 2>/dev/null || true
+            printf '\n'
+        } >>"$LOG_FILE"
+
+        rm -f -- "$BUSYBOX_PART"
+
+        fail "The downloaded BusyBox file is unexpectedly small."
+    fi
+
+    if grep -aEiq \
+        '^(404: Not Found|400: Bad Request|Bad Gateway|Access Denied|<!DOCTYPE|<html)' \
+        "$BUSYBOX_PART" 2>/dev/null; then
+
+        {
+            printf '%s\n' 'Downloaded file appears to be an error page:'
+            head -c 512 "$BUSYBOX_PART" 2>/dev/null || true
+            printf '\n'
+        } >>"$LOG_FILE"
+
+        rm -f -- "$BUSYBOX_PART"
+
+        fail "GitHub returned an error page instead of the BusyBox binary."
+    fi
+
+    mv -f -- "$BUSYBOX_PART" "$BUSYBOX_FILE" || {
+        rm -f -- "$BUSYBOX_PART"
+        fail "Failed to prepare the downloaded BusyBox file."
+    }
+
+    chmod 600 "$BUSYBOX_FILE" 2>/dev/null || true
+
+    printf 'Downloaded BusyBox size: %s bytes\n' \
+        "$busybox_size" >>"$LOG_FILE"
+}
+
+install_adb() {
+    if command -v adb >/dev/null 2>&1; then
+        ADB_BIN="$(command -v adb)"
+        return 0
+    fi
+
+    printf '%s\n' \
+        "ADB is not installed." \
+        "Installing Termux android-tools..."
+
+    if ! command -v pkg >/dev/null 2>&1; then
+        fail "This script must be executed inside Termux."
+    fi
+
+    pkg install -y android-tools 2>&1 | tee -a "$LOG_FILE"
+    local rc="${PIPESTATUS[0]}"
+
+    if [ "$rc" -ne 0 ]; then
+        fail "Failed to install the Termux android-tools package."
+    fi
+
+    ADB_BIN="$(command -v adb 2>/dev/null || true)"
+
+    if [ -z "$ADB_BIN" ]; then
+        fail "android-tools was installed, but the adb command was not found."
+    fi
+}
+
+run_adb_mode() {
+    local mode="$1"
+    shift
+
+    case "$mode" in
+        normal)
+            "$ADB_BIN" "$@"
+            ;;
+
+        nofwmark)
+            env \
+                ANDROID_NO_USE_FWMARK_CLIENT=1 \
+                "$ADB_BIN" "$@"
+            ;;
+
+        isolated)
+            env \
+                ANDROID_NO_USE_FWMARK_CLIENT=1 \
+                ADB_SERVER_SOCKET=tcp:127.0.0.1:5038 \
+                "$ADB_BIN" "$@"
+            ;;
+
+        *)
+            return 127
+            ;;
+    esac
+}
+
+run_adb() {
+    run_adb_mode "$ADB_MODE" "$@"
+}
+
+probe_shell() {
+    local mode="$1"
+    local selector="$2"
+    local output
+    local rc
+
+    if [ "$selector" = "serial" ]; then
+        output="$(
+            run_adb_mode "$mode" \
+                -s "$SERIAL" \
+                shell \
+                'if [ -d /online ]; then echo RLIGHT_ADB_READY; fi' \
+                2>&1
+        )"
+        rc=$?
+    else
+        output="$(
+            run_adb_mode "$mode" \
+                shell \
+                'if [ -d /online ]; then echo RLIGHT_ADB_READY; fi' \
+                2>&1
+        )"
+        rc=$?
+    fi
+
+    output="$(printf '%s\n' "$output" | tr -d '\r')"
+
+    {
+        printf '\nProbe mode: %s\n' "$mode"
+        printf 'Selector: %s\n' "$selector"
+        printf 'Exit code: %s\n' "$rc"
+        printf '%s\n' "$output"
+    } >>"$LOG_FILE"
+
+    if [ "$rc" -eq 0 ] &&
+       [[ "$output" == *"RLIGHT_ADB_READY"* ]]; then
+
+        ADB_MODE="$mode"
+
+        if [ "$selector" = "serial" ]; then
+            ADB_DEVICE_ARGS=(-s "$SERIAL")
+        else
+            ADB_DEVICE_ARGS=()
+        fi
+
+        return 0
+    fi
+
+    return 1
+}
+
+try_adb_mode() {
+    local mode="$1"
+    local attempt
+
+    printf '      Testing ADB mode: %s\n' "$mode"
+
+    # Reuse a connection that may already be active.
+    if probe_shell "$mode" serial; then
+        return 0
+    fi
+
+    if probe_shell "$mode" default; then
+        return 0
+    fi
+
+    attempt=1
+
+    while [ "$attempt" -le 3 ]; do
+        {
+            printf '\nADB mode: %s\n' "$mode"
+            printf 'Connect attempt: %s\n' "$attempt"
+        } >>"$LOG_FILE"
+
+        run_adb_mode "$mode" connect "$SERIAL" \
+            >>"$LOG_FILE" 2>&1 || true
+
+        sleep 1
+
+        if probe_shell "$mode" serial; then
+            return 0
+        fi
+
+        if probe_shell "$mode" default; then
+            return 0
+        fi
+
+        attempt=$((attempt + 1))
+    done
+
+    return 1
+}
+
+select_working_adb() {
+    local mode
+
+    for mode in normal nofwmark isolated; do
+        if try_adb_mode "$mode"; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+adb_shell() {
+    run_adb "${ADB_DEVICE_ARGS[@]}" shell "$1"
+}
+
+adb_push() {
+    run_adb "${ADB_DEVICE_ARGS[@]}" push "$1" "$2"
+}
+
+open_webui() {
+    if command -v termux-open-url >/dev/null 2>&1; then
+        termux-open-url "$WEBUI" >/dev/null 2>&1 || true
+        return
+    fi
+
+    if command -v am >/dev/null 2>&1; then
+        am start \
+            -a android.intent.action.VIEW \
+            -d "$WEBUI" \
+            >/dev/null 2>&1 || true
+        return
+    fi
+
+    if [ -x /system/bin/am ]; then
+        /system/bin/am start \
+            -a android.intent.action.VIEW \
+            -d "$WEBUI" \
+            >/dev/null 2>&1 || true
+    fi
+}
+
+schedule_local_cleanup() {
+    local cleanup_script
+    local parent_dir
+    local package_dir_name
+    local archive_by_folder
+    local archive_v1
+
+    cleanup_script="$TMP_BASE/rlight-termux-cleanup-$$.sh"
+    parent_dir="$(dirname -- "$SCRIPT_DIR")"
+    package_dir_name="$(basename -- "$SCRIPT_DIR")"
+
+    archive_by_folder="$parent_dir/$package_dir_name.zip"
+    archive_v1="$parent_dir/rlight-huawei-adb-termux-v1.zip"
+
+    {
+        printf '%s\n' '#!/data/data/com.termux/files/usr/bin/bash'
+        printf '%s\n' 'sleep 3'
+
+        printf 'cd %q 2>/dev/null || cd /\n' "${HOME:-/}"
+
+        # Remove the BusyBox downloaded into Termux temporary storage.
+        printf 'rm -f -- %q\n' "$BUSYBOX_FILE"
+        printf 'rm -f -- %q\n' "$BUSYBOX_PART"
+
+        # Remove old bundled BusyBox files, if present.
+        printf 'rm -f -- %q\n' "$SCRIPT_DIR/busybox"
+
+        printf 'rm -f -- %q\n' "$SCRIPT_DIR/README-TERMUX.txt"
+        printf 'rm -f -- %q\n' "$SCRIPT_DIR/ADB-DIAGNOSTIC.log"
+        printf 'rm -f -- %q\n' "$SCRIPT_DIR/rlight-huawei-adb-termux.zip"
+        printf 'rm -f -- %q\n' "$SCRIPT_DIR/rlight-huawei-adb-termux-v1.zip"
+
+        printf 'rm -f -- %q\n' "$archive_by_folder"
+        printf 'rm -f -- %q\n' "$archive_v1"
+
+        printf 'rm -f -- %q\n' "$SCRIPT_PATH"
+
+        # Remove the package directory only if it is completely empty.
+        printf 'rmdir -- %q 2>/dev/null || true\n' "$SCRIPT_DIR"
+
+        printf 'rm -f -- %q\n' "$cleanup_script"
+    } >"$cleanup_script"
+
+    chmod 700 "$cleanup_script"
+
+    nohup bash "$cleanup_script" \
+        >/dev/null 2>&1 </dev/null &
+}
+
+banner
+
+{
+    printf 'RLight Huawei Termux installer v%s\n' "$VERSION"
+    printf 'Date: %s\n' "$(date 2>/dev/null || true)"
+    printf 'Target: %s\n' "$SERIAL"
+    printf 'Script: %s\n' "$SCRIPT_PATH"
+    printf 'BusyBox URL: %s\n' "$BUSYBOX_URL"
+    printf 'Bootstrap URL: %s\n' "$BOOTSTRAP_URL"
+} >>"$LOG_FILE"
+
+printf '[1/7] Downloading Huawei BusyBox...\n'
+printf '      Source: %s\n' "$BUSYBOX_URL"
+
+download_busybox
+
+printf '      Downloaded successfully\n'
+printf '      Temporary file: %s\n\n' "$BUSYBOX_FILE"
+
+printf '[2/7] Preparing Termux ADB...\n'
+
+install_adb
+
+{
+    printf '\nADB binary: %s\n' "$ADB_BIN"
+    "$ADB_BIN" version 2>&1 || true
+} >>"$LOG_FILE"
+
+printf '      ADB: %s\n' "$ADB_BIN"
+printf '      Connecting to: %s\n' "$SERIAL"
+printf '      Existing normal ADB server will not be killed.\n'
+
+if ! select_working_adb; then
+    printf '\n---------------- ADB DIAGNOSTIC ----------------\n'
+    cat "$LOG_FILE" 2>/dev/null || true
+    printf '%s\n' '------------------------------------------------'
+
+    fail "No Termux ADB mode could verify the Huawei /online shell."
+fi
+
+printf '      Connected; Huawei shell verified\n'
+printf '      Mode: %s\n\n' "$ADB_MODE"
+
+{
+    printf '\nSelected ADB mode: %s\n' "$ADB_MODE"
+    printf 'Selected device arguments:'
+
+    if [ "${#ADB_DEVICE_ARGS[@]}" -gt 0 ]; then
+        printf ' %q' "${ADB_DEVICE_ARGS[@]}"
+    else
+        printf ' default-device'
+    fi
+
+    printf '\n'
+} >>"$LOG_FILE"
+
+printf '[3/7] Preparing writable Huawei storage...\n'
+
+prepare_output="$(
+    adb_shell '
+        mount -o remount,rw /online >/dev/null 2>&1 || true
+
+        mkdir -p /online/data >/dev/null 2>&1 || true
+
+        test_file="/online/data/.rlight-write-test-$$"
+
+        if (
+            umask 077
+            : >"$test_file" &&
+            rm -f "$test_file"
+        ); then
+            echo ONLINE_OK
+        else
+            echo ONLINE_NOT_WRITABLE
+        fi
+    ' 2>&1
+)"
+prepare_rc=$?
+
+printf '%s\n' "$prepare_output" >>"$LOG_FILE"
+
+if [ "$prepare_rc" -ne 0 ] ||
+   [[ "$prepare_output" != *"ONLINE_OK"* ]]; then
+    fail "The modem path /online/data is unavailable or not writable."
+fi
+
+printf '      OK\n\n'
+
+printf '[4/7] Uploading bootstrap BusyBox...\n'
+
+adb_push "$BUSYBOX_FILE" "$REMOTE_BUSYBOX" \
+    2>&1 | tee -a "$LOG_FILE"
+push_rc="${PIPESTATUS[0]}"
+
+if [ "$push_rc" -ne 0 ]; then
+    fail "Failed to upload BusyBox to the Huawei modem."
+fi
+
+if ! adb_shell "
+    chmod 755 '$REMOTE_BUSYBOX' &&
+    test -x '$REMOTE_BUSYBOX'
+" >>"$LOG_FILE" 2>&1; then
+    fail "Failed to make the remote BusyBox executable."
+fi
+
+# BusyBox is already stored on the modem, so its temporary Termux copy
+# is no longer required.
+remove_temporary_busybox
+
+printf '      Uploaded and verified\n\n'
+
+printf '[5/7] Removing stale installer data...\n'
+
+adb_shell "
+    rm -rf /online/data/rlight-install
+    rm -f /online/data/rlight.zip
+    rm -f '$REMOTE_BOOTSTRAP'
+    rm -f /online/firmware*
+" >>"$LOG_FILE" 2>&1 || true
+
+printf '      OK\n\n'
+
+printf '[6/7] Downloading and installing RLight...\n'
+printf '      Do not disconnect Wi-Fi, LAN or modem power.\n\n'
+
+install_command="
+    '$REMOTE_BUSYBOX' wget \
+        --no-check-certificate \
+        --header='$HOST_HEADER' \
+        -O '$REMOTE_BOOTSTRAP' \
+        '$BOOTSTRAP_URL' \
+    && chmod 755 '$REMOTE_BOOTSTRAP' \
+    && '$REMOTE_BOOTSTRAP'
+"
+
+adb_shell "$install_command" \
+    2>&1 | tee -a "$LOG_FILE"
+install_rc="${PIPESTATUS[0]}"
+
+printf '\n'
+
+if [ "$install_rc" -ne 0 ]; then
+    fail "The Huawei bootstrap returned error code $install_rc."
+fi
+
+printf '[7/7] Verifying RLight installation...\n'
+
+verify_output="$(
+    adb_shell "
+        if [ -x '$REMOTE_ROOT/bin/rlight' ] &&
+           [ -d '$REMOTE_ROOT/conf' ] &&
+           [ -d '$REMOTE_ROOT/web' ]; then
+            echo RLIGHT_INSTALL_OK
+        else
+            echo RLIGHT_INSTALL_MISSING
+        fi
+    " 2>&1
+)"
+verify_rc=$?
+
+printf '%s\n' "$verify_output" >>"$LOG_FILE"
+
+if [ "$verify_rc" -ne 0 ] ||
+   [[ "$verify_output" != *"RLIGHT_INSTALL_OK"* ]]; then
+    fail "RLight verification failed under $REMOTE_ROOT."
+fi
+
+# Clean only temporary remote installer artifacts.
+# /online/data/busybox is retained because another Huawei bootstrap or
+# recovery process may reuse it.
+adb_shell "
+    rm -rf /online/data/rlight-install
+    rm -f /online/data/rlight.zip
+    rm -f '$REMOTE_BOOTSTRAP'
+" >>"$LOG_FILE" 2>&1 || true
+
+run_adb disconnect "$SERIAL" >/dev/null 2>&1 || true
+
+if [ "$ADB_MODE" = "isolated" ]; then
+    run_adb kill-server >/dev/null 2>&1 || true
+fi
+
+printf '      Installed and verified\n\n'
+
+printf '%s\n' \
+    "============================================================" \
+    "  RLight installed successfully" \
+    "  WebUI: $WEBUI" \
+    "============================================================" \
+    "" \
+    "The browser will be opened automatically." \
+    "Termux installer files will be removed automatically."
+
+open_webui
+schedule_local_cleanup
+
+exit 0
