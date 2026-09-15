@@ -1,0 +1,50 @@
+#!/bin/sh
+set -e
+
+WORKDIR="/tmp"
+ZIPFILE="$WORKDIR/wifiv2.zip"
+URL="https://raw.githubusercontent.com/Razifadm/radu/aw1000/wifiv2"
+EXTRACT_DIR="$WORKDIR/wifiv2"
+
+command -v wget >/dev/null 2>&1 || { echo "[!] wget tiada"; exit 1; }
+
+if ! command -v unzip >/dev/null 2>&1; then
+    echo "[*] Install unzip..."
+    opkg update >/dev/null 2>&1
+    opkg install unzip >/dev/null 2>&1
+fi
+
+rm -f "$ZIPFILE"
+rm -rf "$EXTRACT_DIR"
+
+echo "[*] Download dari GitHub (nama fail: wifiv2)..."
+if ! wget -O "$ZIPFILE" "$URL" >/dev/null 2>&1; then
+    echo "[!] Download gagal"
+    exit 1
+fi
+
+[ -s "$ZIPFILE" ] || { echo "[!] Fail kosong"; exit 1; }
+
+echo "[i] Saiz: $(wc -c < "$ZIPFILE") bytes"
+echo "[i] Type: $(file "$ZIPFILE" 2>/dev/null || echo unknown)"
+
+if ! unzip -t "$ZIPFILE" >/dev/null 2>&1; then
+    echo "[!] Bukan zip valid. Kandungan head:"
+    head -c 200 "$ZIPFILE"
+    exit 1
+fi
+
+echo "[*] Extract..."
+unzip -o "$ZIPFILE" -d "$WORKDIR" >/dev/null 2>&1
+
+[ -d "$EXTRACT_DIR" ] || EXTRACT_DIR=$(find "$WORKDIR" -maxdepth 1 -type d -name "wifiv2*" | head -n1)
+[ -n "$EXTRACT_DIR" ] && [ -d "$EXTRACT_DIR" ] || { echo "[!] Folder wifiv2 tak jumpa"; exit 1; }
+
+cd "$EXTRACT_DIR"
+[ -f "./install.sh" ] || { echo "[!] install.sh tak ada"; exit 1; }
+
+chmod +x ./install.sh
+echo "[*] installing new wifi..."
+./install.sh
+
+echo "[✓] Selesai"
