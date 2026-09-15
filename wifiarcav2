@@ -1,50 +1,106 @@
 #!/bin/sh
-set -e
 
-WORKDIR="/tmp"
-ZIPFILE="$WORKDIR/wifiv2.zip"
 URL="https://raw.githubusercontent.com/Razifadm/radu/aw1000/wifiv2"
-EXTRACT_DIR="$WORKDIR/wifiv2"
+ZIP="/tmp/wifiv2.zip"
+WORKDIR="/tmp/wifiv2"
 
-command -v wget >/dev/null 2>&1 || { echo "[!] wget tiada"; exit 1; }
+echo "======================================"
+echo "        WiFi V2 Installer"
+echo "======================================"
 
+# Bersihkan fail lama
+rm -f "$ZIP"
+rm -rf "$WORKDIR"
+
+echo "[1/3] Downloading wifiv2..."
+
+if ! wget -O "$ZIP" "$URL"; then
+    echo "[ERROR] Download failed!"
+    rm -f "$ZIP"
+    exit 1
+fi
+
+# Pastikan fail berjaya didownload
+if [ ! -s "$ZIP" ]; then
+    echo "[ERROR] Downloaded file is empty!"
+    rm -f "$ZIP"
+    exit 1
+fi
+
+echo "[OK] Download complete."
+
+# Check unzip
 if ! command -v unzip >/dev/null 2>&1; then
-    echo "[*] Install unzip..."
-    opkg update >/dev/null 2>&1
-    opkg install unzip >/dev/null 2>&1
-fi
-
-rm -f "$ZIPFILE"
-rm -rf "$EXTRACT_DIR"
-
-echo "[*] Download dari GitHub (nama fail: wifiv2)..."
-if ! wget -O "$ZIPFILE" "$URL" >/dev/null 2>&1; then
-    echo "[!] Download gagal"
+    echo "[ERROR] Command 'unzip' not found."
+    echo "Install dengan:"
+    echo "  opkg update"
+    echo "  opkg install unzip"
     exit 1
 fi
 
-[ -s "$ZIPFILE" ] || { echo "[!] Fail kosong"; exit 1; }
+echo "[2/3] Extracting..."
 
-echo "[i] Saiz: $(wc -c < "$ZIPFILE") bytes"
-echo "[i] Type: $(file "$ZIPFILE" 2>/dev/null || echo unknown)"
+mkdir -p "$WORKDIR"
 
-if ! unzip -t "$ZIPFILE" >/dev/null 2>&1; then
-    echo "[!] Bukan zip valid. Kandungan head:"
-    head -c 200 "$ZIPFILE"
+if ! unzip -o "$ZIP" -d "$WORKDIR"; then
+    echo "[ERROR] Failed to extract wifiv2.zip!"
+    rm -f "$ZIP"
+    rm -rf "$WORKDIR"
     exit 1
 fi
 
-echo "[*] Extract..."
-unzip -o "$ZIPFILE" -d "$WORKDIR" >/dev/null 2>&1
+# Github ZIP mungkin mengandungi:
+#
+# /tmp/wifiv2/install.sh
+#
+# atau
+#
+# /tmp/wifiv2/wifiv2/install.sh
+#
+INSTALL_SH=""
 
-[ -d "$EXTRACT_DIR" ] || EXTRACT_DIR=$(find "$WORKDIR" -maxdepth 1 -type d -name "wifiv2*" | head -n1)
-[ -n "$EXTRACT_DIR" ] && [ -d "$EXTRACT_DIR" ] || { echo "[!] Folder wifiv2 tak jumpa"; exit 1; }
+if [ -f "$WORKDIR/install.sh" ]; then
+    INSTALL_SH="$WORKDIR/install.sh"
+elif [ -f "$WORKDIR/wifiv2/install.sh" ]; then
+    INSTALL_SH="$WORKDIR/wifiv2/install.sh"
+else
+    # Cari install.sh maksimum beberapa directory
+    INSTALL_SH="$(find "$WORKDIR" -name install.sh -type f 2>/dev/null | head -n 1)"
+fi
 
-cd "$EXTRACT_DIR"
-[ -f "./install.sh" ] || { echo "[!] install.sh tak ada"; exit 1; }
+if [ -z "$INSTALL_SH" ] || [ ! -f "$INSTALL_SH" ]; then
+    echo "[ERROR] install.sh not found!"
+    echo
+    echo "Extracted files:"
+    find "$WORKDIR" -maxdepth 3 -type f 2>/dev/null
+    exit 1
+fi
 
-chmod +x ./install.sh
-echo "[*] installing new wifi..."
-./install.sh
+INSTALL_DIR="$(dirname "$INSTALL_SH")"
 
-echo "[✓] Selesai"
+echo "[OK] Found installer:"
+echo "     $INSTALL_SH"
+
+echo "[3/3] Running installer..."
+
+cd "$INSTALL_DIR" || {
+    echo "[ERROR] Cannot enter $INSTALL_DIR"
+    exit 1
+}
+
+chmod 755 install.sh 2>/dev/null
+
+if ! sh ./install.sh; then
+    echo "[ERROR] install.sh failed!"
+    exit 1
+fi
+
+echo
+echo "======================================"
+echo " WiFi V2 installation completed."
+echo "======================================"
+
+# Cleanup download
+rm -f "$ZIP"
+
+exit 0
