@@ -1,0 +1,90 @@
+cat >/etc/firewall.user <<'EOF'
+#modded AW1KV2 ttl by Raducksijaa
+set_ttl=64
+
+
+while iptables -t mangle -D PREROUTING \
+    -j TTL --ttl-set "$set_ttl" 2>/dev/null
+do
+    :
+done
+
+while iptables -t mangle -D POSTROUTING \
+    -j TTL --ttl-set "$set_ttl" 2>/dev/null
+do
+    :
+done
+
+
+while ip6tables -t mangle -D PREROUTING \
+    -j HL --hl-set "$set_ttl" 2>/dev/null
+do
+    :
+done
+
+while ip6tables -t mangle -D POSTROUTING \
+    -j HL --hl-set "$set_ttl" 2>/dev/null
+do
+    :
+done
+
+iptables -t mangle -N AW1KV2_TTL64 2>/dev/null || true
+iptables -t mangle -F AW1KV2_TTL64
+
+iptables -t mangle -A AW1KV2_TTL64 \
+    -j TTL --ttl-set "$set_ttl"
+
+while iptables -t mangle -D FORWARD \
+    -i br-lan -o ccmni+ \
+    -j AW1KV2_TTL64 2>/dev/null
+do
+    :
+done
+
+while iptables -t mangle -D FORWARD \
+    -i ccmni+ -o br-lan \
+    -j AW1KV2_TTL64 2>/dev/null
+do
+    :
+done
+
+iptables -t mangle -A FORWARD \
+    -i br-lan -o ccmni+ \
+    -j AW1KV2_TTL64
+
+iptables -t mangle -A FORWARD \
+    -i ccmni+ -o br-lan \
+    -j AW1KV2_TTL64
+
+
+ip6tables -t mangle -N AW1KV2_HL64 2>/dev/null || true
+ip6tables -t mangle -F AW1KV2_HL64
+
+ip6tables -t mangle -A AW1KV2_HL64 \
+    -j HL --hl-set "$set_ttl"
+
+
+while ip6tables -t mangle -D FORWARD \
+    -i br-lan -o ccmni+ \
+    -j AW1KV2_HL64 2>/dev/null
+do
+    :
+done
+
+while ip6tables -t mangle -D FORWARD \
+    -i ccmni+ -o br-lan \
+    -j AW1KV2_HL64 2>/dev/null
+do
+    :
+done
+
+
+ip6tables -t mangle -A FORWARD \
+    -i br-lan -o ccmni+ \
+    -j AW1KV2_HL64
+
+ip6tables -t mangle -A FORWARD \
+    -i ccmni+ -o br-lan \
+    -j AW1KV2_HL64
+EOF
+/etc/init.d/firewall restart >/dev/null 2>&1
