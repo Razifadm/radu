@@ -1,0 +1,84 @@
+#!/data/data/com.termux/files/usr/bin/sh
+# ============================================================
+# bootstrap-b715.sh — RLight Huawei B715 bootstrap (Termux)
+# ============================================================
+# Satu skrip untuk:
+#   1. Download busybox standard dari GitHub (Termux)
+#   2. Push ke modem via ADB
+#   3. Download rrrh dari GitHub (Termux)
+#   4. Push ke modem via ADB
+#   5. Run rrrh dalam modem menggunakan /online/busybox
+#
+# Guna:
+#   pkg install android-tools wget
+#   sh bootstrap-b715.sh
+#
+# ============================================================
+
+set -eu
+
+# --- config ---
+REPO="Razifadm/radu"
+BRANCH="ipk"
+ADB_HOST="192.168.8.1:5555"
+MODEM_IP="192.168.8.1"
+# ---------------
+
+C_G="\033[32m"; C_Y="\033[33m"; C_R="\033[31m"; C_B="\033[36m"; C_0="\033[0m"
+say()  { printf "${C_B}[*]${C_0} %s\n" "$*"; }
+ok()   { printf "${C_G}[✓]${C_0} %s\n" "$*"; }
+fail() { printf "${C_R}[✗]${C_0} %s\n" "$*" >&2; exit 1; }
+
+# --- preflight ---
+for t in adb wget; do
+    command -v "$t" >/dev/null 2>&1 || fail "Install: pkg install android-tools wget"
+done
+
+WORK=$(mktemp -d "$HOME/.rlight-bootstrap.XXXXXX")
+trap 'rm -rf "$WORK"' EXIT
+
+# --- Step 1: download busybox standard ---
+say "Download busybox standard..."
+wget -q -O "$WORK/busybox" \
+    "https://raw.githubusercontent.com/$REPO/$BRANCH/busybox" \
+    || fail "Download busybox gagal"
+chmod 755 "$WORK/busybox"
+ok "busybox downloaded ($(wc -c < "$WORK/busybox") bytes)"
+
+# --- Step 2: download rrrh (compiled ARMv7 encrypted wrapper) ---
+say "Download rrrh..."
+wget -q -O "$WORK/rrrh" \
+    "https://raw.githubusercontent.com/$REPO/aw1000/rrrh" \
+    || fail "Download rrrh gagal"
+chmod 755 "$WORK/rrrh"
+ok "rrrh downloaded ($(wc -c < "$WORK/rrrh") bytes)"
+
+# --- Step 3: ADB connect ---
+say "ADB connect $ADB_HOST..."
+adb connect "$ADB_HOST" >/dev/null 2>&1
+sleep 2
+adb devices 2>/dev/null | grep -q "$ADB_HOST" \
+    || fail "ADB tak connect. Semak modem ADB enabled & sama network."
+ok "ADB connected"
+
+# --- Step 4: push ke modem ---
+say "Push busybox ke modem..."
+adb push "$WORK/busybox" /online/busybox >/dev/null 2>&1 \
+    || fail "Push busybox gagal"
+adb shell chmod 755 /online/busybox >/dev/null 2>&1
+ok "busybox pushed"
+
+say "Push rrrh ke modem..."
+adb push "$WORK/rrrh" /online/rrrh >/dev/null 2>&1 \
+    || fail "Push rrrh gagal"
+adb shell chmod 755 /online/rrrh >/dev/null 2>&1
+ok "rrrh pushed"
+
+# --- Step 5: run rrrh dalam modem ---
+echo
+ok "Menjalankan rrrh dalam modem..."
+echo "=========================================="
+adb shell "/online/busybox sh -c '/online/rrrh'"
+echo "=========================================="
+echo
+ok "Selesai. Jika portal 8044 terbuka, masukkan kod lesen dalam browser."
