@@ -62,7 +62,7 @@ adb shell '
 '
 
 ok "Menjalankan rrrh..."
-adb shell 'rm -rf /online/.rlight-install.lock /online/.rlight-download.* 2>/dev/null'
+adb shell 'rm -rf /online/.rlight-install.lock /online/data/.rlight-install.lock /online/.rlight-download.* 2>/dev/null'
 echo "=========================================="
 adb shell '/online/rrrh'
 echo "=========================================="
